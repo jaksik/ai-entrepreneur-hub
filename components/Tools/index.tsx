@@ -1,27 +1,36 @@
 'use client'
 
-import { tools, Tool } from "../../data/tools-data"
 import ToolCard from "./ToolCard"
 import React from "react"
+import { Database } from '@/types/supabase'
 
-export default function Tools() {
+type Tool = Database['public']['Tables']['tools']['Row'];
+
+interface ToolsProps {
+    tools: Tool[];
+}
+
+export default function Tools({ tools }: ToolsProps) {
     const [selectedCategory, setSelectedCategory] = React.useState<string>("All")
     const [isOpen, setIsOpen] = React.useState(false);
 
     // Group tools by category
     const toolsByCategory = React.useMemo(() => {
         return tools.reduce((acc: Record<string, Tool[]>, tool) => {
-            if (!acc[tool.category]) {
-                acc[tool.category] = []
+            // Ensure category exists (fallback for safety)
+            const cat = tool.category || "Uncategorized";
+            
+            if (!acc[cat]) {
+                acc[cat] = []
             }
-            acc[tool.category].push(tool)
+            acc[cat].push(tool)
             return acc
         }, {})
-    }, [])
+    }, [tools])
 
     // Get all unique categories
     const categories = React.useMemo(() => {
-        return ["All", ...Object.keys(toolsByCategory)]
+        return ["All", ...Object.keys(toolsByCategory).sort()]
     }, [toolsByCategory])
 
     // Filter tools based on selected category
@@ -112,9 +121,9 @@ export default function Tools() {
                 {/* Main Content */}
                 <div className="lg:col-span-8">
                     <div className="grid grid-cols-1 gap-5">
-                        {Object.entries(filteredTools).map(([category, tools]) => (
+                        {Object.entries(filteredTools).map(([category, categoryTools]) => (
                             <React.Fragment key={category}>
-                                {tools.map((tool) => (
+                                {categoryTools.map((tool) => (
                                     <ToolCard key={tool.id} tool={tool} />
                                 ))}
                             </React.Fragment>
@@ -125,4 +134,3 @@ export default function Tools() {
         </div>
     );
 }
-

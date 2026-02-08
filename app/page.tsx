@@ -1,7 +1,11 @@
 import Link from "next/link"
-import GetTools from "@/components/Tools"
+import GetTools from "@/components/tools/index" // Ensure this path matches where you put the file
+import { createClient } from '@/utils/supabase/server'
 
-export default function ToolsPage() {
+export default async function ToolsPage() {
+  const supabase = await createClient()
+  const { data: tools } = await supabase.from('tools').select().order('name')
+
   return (
     <div className="space-y-8 pb-4 min-h-screen">
       <div className="container mx-auto px-2 py-8">
@@ -24,9 +28,11 @@ export default function ToolsPage() {
           </p>
         </section>
 
-        <GetTools />
+        {/* Pass the server-fetched tools to the client component */}
+        <GetTools tools={tools || []} />
+        
       </div>
- <footer className="mt-3 py-4 pb-0">
+      <footer className="mt-3 py-4 pb-0">
               <div className="flex flex-col items-center justify-center">
                 <p className="text-md text-slate-600 dark:text-slate-400">
                   © {new Date().getFullYear()} Sharp Startup LLC | Austin, TX 🇺🇸
