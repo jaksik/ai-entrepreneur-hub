@@ -11,7 +11,7 @@ export default function AffiliateDisclosurePage() {
                         Affiliate Disclosure
                     </h1>
                 </section>
-                  <div className="mx-auto max-w-[800px]">
+                  <div className="mx-auto max-w-800px">
                     <Link href="/">
                     <button className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
                       Back to Tools

@@ -16,16 +16,15 @@ const destination = tool.affiliate_link || tool.url || "";
             href={destination}
             target="_blank"
             rel="noopener noreferrer"
-            className="group block p-3 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 
-            shadow-sm hover:shadow-lg transition-all duration-200 ease-in-out 
-            hover:border-gray-300 dark:hover:border-gray-700 
-            hover:bg-gray-50 dark:hover:bg-gray-800/50 text-decoration-none"
+            className="group block p-3 rounded-xl bg-(--color-card-bg) border border-(--color-card-border) 
+            shadow-sm hover:shadow-lg 
+            hover:border-accent-primary hover:bg-(--color-card-hover-bg) text-decoration-none"
         >
             <div className="flex gap-4">
                 {/* Logo Section */}
-                <div className="w-10 h-10 bg-white flex-shrink-0 flex items-center justify-center rounded-lg m-2 mt-1 ms-3 
-                    ring-1 ring-gray-200 dark:ring-gray-800 group-hover:ring-gray-300 dark:group-hover:ring-gray-700 
-                    transition-all duration-200">
+                <div className="w-10 h-10 bg-(--color-bg-primary) shrink-0 flex items-center justify-center rounded-lg m-2 mt-1 ms-3 
+                    ring-1 ring-(--color-card-border) group-hover:ring-accent-primary 
+                    ">
                          <img
                         src={tool.logo_url || ""} // Updated from logoUrl
                         alt={`${tool.name} logo`}
@@ -38,22 +37,22 @@ const destination = tool.affiliate_link || tool.url || "";
                 </div>
 
                 {/* Content Section */}
-                <div className="flex flex-col flex-grow min-w-0">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-sky-400 transition-colors">
+                <div className="flex flex-col grow min-w-0">
+                    <h3 className="text-xl font-semibold text-(--color-text-primary) group-hover:text-accent-primary">
                         {tool.name}
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    <p className="text-sm text-(--color-text-secondary) mb-2">
                         {tool.category}
                     </p>
-                    <p className="hidden md:block text-md text-gray-600 dark:text-gray-300 leading-relaxed">
+                    <p className="hidden md:block text-md text-(--color-text-secondary) leading-relaxed">
                         {tool.description}
                     </p>
                 </div>
 
-                <div className="w-7 h-7 flex-shrink-0 flex items-center justify-center 
-                    translate-x-0 group-hover:translate-x-0.5 transition-transform duration-200">
+                <div className="w-7 h-7 shrink-0 flex items-center justify-center 
+                    translate-x-0 group-hover:translate-x-0.5">
                     <svg
-                        className="w-6 h-6 text-blue-600 dark:text-sky-400 flex-shrink-0"
+                        className="w-6 h-6 text-accent-primary shrink-0"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -70,8 +69,8 @@ const destination = tool.affiliate_link || tool.url || "";
             </div>
 
             {/* Mobile Description Section */}
-            <div className="block md:hidden p-4 pb-1">
-                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed font-inter font-medium">
+                <div className="block md:hidden p-4 pb-1">
+                <p className="text-(--color-text-secondary) text-sm leading-relaxed font-inter font-medium">
                     {tool.description}
                 </p>
             </div>

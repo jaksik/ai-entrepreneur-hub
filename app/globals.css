@@ -1,26 +1,62 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Light Mode Theme */
+:root[data-theme='light'],
+:root:not([data-theme]) {
+  /* Primary Colors */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-tertiary: #f3f4f6;
+  
+  /* Text Colors */
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-tertiary: #9ca3af;
+  
+  /* Border & Accents */
+  --color-border: #e5e7eb;
+  --color-border-light: #f3f4f6;
+  --color-accent-primary: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-accent-light: #dbeafe;
+  
+  /* Component Specific */
+  --color-card-bg: #ffffff;
+  --color-card-border: #e5e7eb;
+  --color-card-hover-bg: #f9fafb;
+  --color-input-bg: #ffffff;
+  --color-input-border: #d1d5db;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Dark Mode Theme */
+:root[data-theme='dark'] {
+  /* Primary Colors */
+  --color-bg-primary: #1a1a1a;
+  --color-bg-secondary: #262626;
+  --color-bg-tertiary: #333333;
+  
+  /* Text Colors */
+  --color-text-primary: #f5f5f5;
+  --color-text-secondary: #d4d4d8;
+  --color-text-tertiary: #a1a1aa;
+  
+  /* Border & Accents */
+  --color-border: #404040;
+  --color-border-light: #2d2d2d;
+  --color-accent-primary: #58a6ff;
+  --color-accent-hover: #79c0ff;
+  --color-accent-light: #0d47a1;
+  
+  /* Component Specific */
+  --color-card-bg: #262626;
+  --color-card-border: #404040;
+  --color-card-hover-bg: #333333;
+  --color-input-bg: #1f1f1f;
+  --color-input-border: #404040;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  transition: background-color 0.2s, color 0.2s;
 }
