@@ -1,1 +1,1 @@
-export { default } from '../../../../edit/[id]/page'
+export { default } from '../../../edit/[id]/page'
