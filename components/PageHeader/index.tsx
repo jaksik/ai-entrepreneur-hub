@@ -12,12 +12,12 @@ export default function SectionHeader({
 }) {
   return (
     <section className={`text-center space-y-4 mb-12 ${className}`}>
-      <h1 className="text-3xl font-bold tracking-tight md:text-5xl text-text-primary font-inter">
+      <h1 className="type-title tracking-tight md:text-5xl text-(--color-text-primary)">
         {title}
       </h1>
 
       {lead && (
-          <p className="mx-auto max-w-[600px] text-text-secondary text-lg font-bold lg:text-xl">
+          <p className="type-subtitle mx-auto max-w-150 text-(--color-text-secondary) lg:text-xl">
           {lead}
         </p>
       )}
@@ -27,7 +27,7 @@ export default function SectionHeader({
       </div> */}
 
       {disclaimer && (
-        <p className="mx-auto italic max-w-[500px] text-text-tertiary md:text-sm">
+        <p className="type-caption mx-auto italic max-w-125 text-(--color-text-tertiary)">
           {disclaimer}
         </p>
       )}

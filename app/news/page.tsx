@@ -53,8 +53,8 @@ export default async function ArticlesPage({
     <div className="space-y-8 pb-4 min-h-screen bg-bg-primary">
       <div className="container mx-auto px-2 py-8">
         <SectionHeader
-          title="News Library"
-          lead="Discover the latest articles. Filter by publisher and category to find exactly what you need."
+          title="AI News Library"
+          lead="Discover the latest AI-news."
         />
 
         <ArticlesTable 

@@ -38,13 +38,13 @@ const destination = tool.affiliate_link || tool.url || "";
 
                 {/* Content Section */}
                 <div className="flex flex-col grow min-w-0">
-                    <h3 className="text-xl font-semibold text-(--color-text-primary) group-hover:text-accent-primary">
+                    <h3 className="type-subtitle text-(--color-text-primary) group-hover:text-accent-primary">
                         {tool.name}
                     </h3>
-                    <p className="text-sm text-(--color-text-secondary) mb-2">
+                    <p className="type-caption text-(--color-text-secondary) mb-2">
                         {tool.category}
                     </p>
-                    <p className="hidden md:block text-md text-(--color-text-secondary) leading-relaxed">
+                    <p className="hidden md:block type-body text-(--color-text-secondary) text-md leading-relaxed">
                         {tool.description}
                     </p>
                 </div>
@@ -70,7 +70,7 @@ const destination = tool.affiliate_link || tool.url || "";
 
             {/* Mobile Description Section */}
                 <div className="block md:hidden p-4 pb-1">
-                <p className="text-(--color-text-secondary) text-sm leading-relaxed font-inter font-medium">
+                <p className="type-body text-(--color-text-secondary) text-sm leading-relaxed">
                     {tool.description}
                 </p>
             </div>

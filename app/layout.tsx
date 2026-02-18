@@ -1,23 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Poppins } from "next/font/google";
 import { ThemeProvider } from "../components/ThemeProvider";
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const fontBody = Inter({
+  variable: "--font-body",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const fontHeading = Poppins({
+  variable: "--font-heading",
+  weight: ["500", "600", "700"],
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Tool Library",
-  description: "Library of useful online tools for startups and entrepreneurs.",
+  title: "The AI Entrepreneur",
+  description: "Your central hub for everything AI related.",
 };
 
 export default function RootLayout({
@@ -26,8 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="en" className={`${fontBody.variable} ${fontHeading.variable}`}>
+      <body className="antialiased">
         <ThemeProvider>
           <Navbar />
           {children}

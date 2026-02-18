@@ -55,7 +55,7 @@ export default function ArticlesTable({
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4 bg-(--color-card-bg) p-4 rounded-lg border border-(--color-card-border)">
         <div className="flex-1">
-          <label className="block text-sm font-medium text-(--color-text-secondary) mb-1">Publisher</label>
+          <label className="block type-caption text-(--color-text-secondary) mb-1">Publisher</label>
           <select 
             value={publisher}
             onChange={(e) => {
@@ -68,7 +68,7 @@ export default function ArticlesTable({
           </select>
         </div>
         <div className="flex-1">
-          <label className="block text-sm font-medium text-(--color-text-secondary) mb-1">Category</label>
+          <label className="block type-caption text-(--color-text-secondary) mb-1">Category</label>
           <select 
             value={category}
             onChange={(e) => {
@@ -84,9 +84,9 @@ export default function ArticlesTable({
 
       {/* Table */}
       <div className="overflow-x-auto rounded-lg border border-(--color-card-border)">
-        <table className="w-full text-left text-sm">
+        <table className="w-full text-left type-caption">
           {/* Header - Hidden on Mobile */}
-          <thead className="hidden md:table-header-group bg-(--color-bg-secondary) text-(--color-text-secondary) font-medium border-b border-(--color-card-border)">
+          <thead className="hidden md:table-header-group bg-(--color-bg-secondary) text-(--color-text-secondary) border-b border-(--color-card-border)">
             <tr>
               <th className="px-4 py-3 w-32">Date</th>
               <th className="px-4 py-3">Title</th>
@@ -98,7 +98,7 @@ export default function ArticlesTable({
           <tbody className="divide-y divide-(--color-card-border) bg-(--color-card-bg)">
             {articles.length === 0 ? (
                 <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-(--color-text-secondary)">No articles found.</td>
+                  <td colSpan={4} className="type-body px-4 py-8 text-center text-(--color-text-secondary)">No articles found.</td>
                 </tr>
             ) : (
                 articles.map((article) => {
@@ -115,7 +115,7 @@ export default function ArticlesTable({
                             <td className="px-4 py-3">
                                 <div className="flex flex-col">
                                     {/* Mobile Only: Date */}
-                                    <span className="md:hidden text-xs text-(--color-text-secondary) mb-1">
+                                <span className="md:hidden type-caption text-(--color-text-secondary) mb-1">
                                         {dateStr}
                                     </span>
 
@@ -124,26 +124,26 @@ export default function ArticlesTable({
                                         href={article.url || '#'} 
                                         target="_blank" 
                                         rel="noopener noreferrer"
-                                        className="text-(--color-text-primary) font-semibold hover:text-accent-primary hover:underline text-base leading-snug"
+                                        className="type-body text-(--color-text-primary) hover:text-accent-primary hover:underline text-base leading-snug"
                                     >
                                         {article.title}
                                     </a>
 
                                     {/* Mobile Only: Publisher */}
-                                    <span className="md:hidden text-xs text-(--color-text-secondary) mt-1 font-medium">
+                                      <span className="md:hidden type-caption text-(--color-text-secondary) mt-1">
                                         {article.publisher}
                                     </span>
                                 </div>
                             </td>
 
                             {/* 3. Publisher (Desktop Only) */}
-                            <td className="hidden md:table-cell px-4 py-3 font-medium text-(--color-text-primary)">
+                            <td className="hidden md:table-cell px-4 py-3 type-body text-(--color-text-primary)">
                                 {article.publisher}
                             </td>
 
                             {/* 4. Category (Desktop Only) */}
                             <td className="hidden md:table-cell px-4 py-3">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent-light text-accent-primary">
+                                <span className="type-caption inline-flex items-center px-2.5 py-0.5 rounded-full bg-accent-light text-accent-primary">
                                     {article.category}
                                 </span>
                             </td>

@@ -12,7 +12,7 @@ export default async function ToolsPage() {
       <div className="container mx-auto px-2 py-8">
         <SectionHeader
           title="Tool Library"
-          lead="A curated library of powerful tools and software to build your next great idea."
+          lead="A curated library of powerful tools & software."
           disclaimer="This page contains affiliate links. If you click on a link and make a purchase, we may earn a commission at no additional cost to you."
         />
 

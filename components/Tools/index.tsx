@@ -50,7 +50,7 @@ export default function Tools({ tools }: ToolsProps) {
 
                 {/* Mobile Dropdown */}
                 <div className="md:hidden relative w-full mb-6">
-                    <p className="font-light text-sm mb-2 text-(--color-text-secondary)">
+                    <p className="type-caption mb-2 text-(--color-text-secondary)">
                         Categories:
                     </p>
                     <button
@@ -58,7 +58,7 @@ export default function Tools({ tools }: ToolsProps) {
                         className="w-full flex items-center justify-between px-4 py-3 bg-(--color-card-bg) border border-(--color-card-border) rounded-lg shadow-sm text-(--color-text-primary)"
                         aria-expanded={isOpen}
                     >
-                        <span className="font-semibold">
+                        <span className="type-body">
                             {selectedCategory || "Select a category"}
                         </span>
                         <svg
@@ -86,7 +86,7 @@ export default function Tools({ tools }: ToolsProps) {
                                     className={`w-full text-left px-4 py-3 
                   ${selectedCategory === category ? "bg-accent-light text-accent-primary" : "hover:bg-(--color-bg-secondary) text-(--color-text-primary)"}`}
                                 >
-                                    <span className="font-semibold text-md font-inter">
+                                    <span className="type-body text-md">
                                         {category}
                                     </span>
                                 </button>
@@ -98,7 +98,7 @@ export default function Tools({ tools }: ToolsProps) {
                 {/* Desktop Sidebar - Hidden on Mobile */}
                 <div className="hidden md:block md:col-span-3">
                     <div className="space-y-1 pr-4 sticky top-20 max-h-[calc(100vh-10rem)] overflow-y-auto">
-                        <p className="font-light text-sm mb-2 text-(--color-text-secondary)">
+                        <p className="type-caption mb-2 text-(--color-text-secondary)">
                             Categories:
                         </p>
                         {categories.map((category) => (
@@ -111,7 +111,7 @@ export default function Tools({ tools }: ToolsProps) {
                                         : "text-(--color-text-primary) hover:bg-(--color-bg-secondary)"
                                     }`}
                             >
-                                <h3 className="font-semibold text-md font-inter">
+                                <h3 className="type-body text-md">
                                     {category}
                                 </h3>
                             </button>

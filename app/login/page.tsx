@@ -4,10 +4,10 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-24">
       <form className="flex flex-col gap-4 w-full max-w-md border p-8 rounded-lg shadow-sm">
-        <h1 className="text-2xl font-bold mb-4">Admin Login</h1>
+        <h1 className="type-title text-(--color-text-primary) mb-4">Admin Login</h1>
         
         <label className="flex flex-col gap-2">
-          <span>Email</span>
+          <span className="type-caption">Email</span>
           <input 
             name="email" 
             type="email" 
@@ -17,7 +17,7 @@ export default function LoginPage() {
         </label>
         
         <label className="flex flex-col gap-2">
-          <span>Password</span>
+          <span className="type-caption">Password</span>
           <input 
             name="password" 
             type="password" 
@@ -26,7 +26,7 @@ export default function LoginPage() {
           />
         </label>
         
-        <button formAction={login} className="bg-black text-white p-2 rounded hover:bg-gray-800">
+        <button formAction={login} className="type-body bg-black text-white p-2 rounded hover:bg-gray-800">
           Sign In
         </button>
       </form>

@@ -19,7 +19,7 @@ export const BeehiivForm: React.FC<BeehiivFormProps> = ({
     title = "Stay Updated",
     description = "Stay up to date by joining our newsletter.",
     buttonText = "Subscribe",
-    placeholder = "Enter your email address",
+    placeholder = "Email address",
     enableDebugLogging = false
 }) => {
     const {
@@ -48,15 +48,15 @@ export const BeehiivForm: React.FC<BeehiivFormProps> = ({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-(--color-text-primary) mb-2 font-inter">
+                <h3 className="type-subtitle text-(--color-text-primary) mb-2">
                     Subscribed! You have successfully opted in
                 </h3>
-                <p className="text-(--color-text-secondary) font-inter">
+                <p className="type-body text-(--color-text-secondary)">
                     Check your email for a confirmation message.
                 </p>
                 <button
                     onClick={() => resetSuccess()}
-                    className="mt-4 px-4 py-2 bg-(--color-accent-primary) text-white hover:bg-(--color-accent-hover) rounded-md font-semibold font-inter"
+                    className="type-body mt-4 px-4 py-2 bg-(--color-accent-primary) text-white hover:bg-(--color-accent-hover) rounded-md"
                 >
                     Subscribe another email
                 </button>
@@ -66,12 +66,6 @@ export const BeehiivForm: React.FC<BeehiivFormProps> = ({
 
     return (
         <div className={`p-4 ${className}`}>
-            {/* <div className="text-center mb-6">
-                <p className="mx-auto max-w-800px text-(--color-text-secondary) md:text-xl font-inter">
-                    {description}
-                </p>
-            </div> */}
-
             <div className="flex w-full flex-col items-center justify-center">
                 <div className="w-full max-w-600px">
                     <form onSubmit={handleSubmit} className="group w-full">
@@ -88,7 +82,7 @@ export const BeehiivForm: React.FC<BeehiivFormProps> = ({
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder={placeholder}
-                                        className="z-10 w-full border-none bg-transparent placeholder-shown:text-ellipsis text-lg focus:text-lg active:text-lg sm:text-lg text-(--color-text-primary) placeholder-(--color-text-secondary) focus:outline-none font-inter"
+                                        className="type-body z-10 w-full border-none bg-transparent placeholder-shown:text-ellipsis text-lg focus:text-lg active:text-lg sm:text-lg text-(--color-text-primary) placeholder-(--color-text-secondary) focus:outline-none"
                                         disabled={isLoading}
                                         autoComplete="email"
                                         required
@@ -97,7 +91,7 @@ export const BeehiivForm: React.FC<BeehiivFormProps> = ({
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    className="cursor-pointer px-5 py-3 font-semibold w-full sm:w-auto text-lg focus:text-lg active:text-lg sm:text-lg rounded-md bg-(--color-accent-primary) text-white hover:bg-(--color-accent-hover) disabled:opacity-50 disabled:cursor-not-allowed font-inter"
+                                    className="type-body cursor-pointer px-5 py-3 w-full sm:w-auto text-lg focus:text-lg active:text-lg sm:text-lg rounded-md bg-(--color-accent-primary) text-white hover:bg-(--color-accent-hover) disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isLoading ? (
                                         <div className="flex items-center justify-center">
@@ -118,7 +112,7 @@ export const BeehiivForm: React.FC<BeehiivFormProps> = ({
             </div>
 
             {error && (
-                <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg p-3 mt-4 font-inter">
+                <div className="type-caption text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 mt-4">
                     {error}
                 </div>
             )}

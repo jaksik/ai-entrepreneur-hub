@@ -7,7 +7,7 @@ export default function AffiliateDisclosurePage() {
 
                 {/* Page Header Section */}
                 <section className="text-center space-y-4 mb-12">
-                    <h1 className="text-4xl font-bold tracking-tight md:text-5xl text-gray-900 dark:text-gray-100 font-inter">
+                  <h1 className="type-title text-(--color-text-primary) md:text-5xl tracking-tight">
                         Affiliate Disclosure
                     </h1>
                 </section>
@@ -18,7 +18,7 @@ export default function AffiliateDisclosurePage() {
                     </button>
                   </Link>
 
-                <p className="text-black-500 md:text-xl dark:text-gray-400 pt-3">
+                <p className="type-body text-(--color-text-secondary) md:text-xl pt-3">
                     <i>Sharp Startup LLC</i> participates in affiliate marketing programs, which means <i>Sharp Startup LLC</i> may earn commissions on purchases made through links on this site, at no additional cost to you.  <br /><br />
                     Affiliate links are used to help support the operation of this website. We only recommend products, services, or resources that we believe will provide value to our readers. <br /><br />
                     Any compensation received does not influence the content, topics, or opinions expressed on this site. All views and opinions expressed are purely our own. <br /><br />

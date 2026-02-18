@@ -8,10 +8,10 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="bg-(--color-card-bg) border-b border-(--color-card-border) shadow-md">
+    <nav className="">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link href="/" className="font-bold text-xl text-(--color-text-primary)">
+          <Link href="/" className="type-subtitle text-(--color-text-primary) text-2xl">
             The AI Entrepreneur
           </Link>
 
@@ -24,8 +24,8 @@ export default function Navbar() {
             </button>
 
             <ul className={`${isOpen ? 'block' : 'hidden'} bg-(--color-bg-primary) md:flex gap-6 absolute md:static top-16 left-0 right-0 md:top-auto md:right-auto md:bg-transparent border-b border-(--color-card-border) md:border-b-0 flex-col md:flex-row w-full md:w-auto p-4 md:p-0 z-50`}>
-              <li><Link href="/tools" className="text-(--color-text-primary) hover:text-accent-primary block py-2 md:py-0">Tools</Link></li>
-              <li><Link href="/news" className="text-(--color-text-primary) hover:text-accent-primary block py-2 md:py-0">News</Link></li>
+              <li><Link href="/tools" className="type-body text-(--color-text-primary) hover:text-accent-primary block py-2 md:py-0 text-lg">Tools</Link></li>
+              <li><Link href="/news" className="type-body text-(--color-text-primary) hover:text-accent-primary block py-2 md:py-0 text-lg">News</Link></li>
               <li className="md:hidden border-t border-(--color-card-border) pt-4 mt-4">
                 <ThemeToggle />
               </li>
