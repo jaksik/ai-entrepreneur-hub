@@ -15,7 +15,7 @@ export async function createTool(formData: FormData) {
     // Create a unique file name so we don't overwrite existing files
     const fileName = `${Date.now()}-${logoFile.name}`
     
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('logos')
       .upload(fileName, logoFile, {
         cacheControl: '3600',
@@ -54,5 +54,6 @@ export async function createTool(formData: FormData) {
   // 3. Refresh data and redirect
   revalidatePath('/')
   revalidatePath('/admin')
-  redirect('/admin')
+  revalidatePath('/admin/tools')
+  redirect('/admin/tools')
 }

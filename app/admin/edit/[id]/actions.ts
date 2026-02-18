@@ -48,8 +48,9 @@ export async function updateTool(formData: FormData) {
   }
 
   revalidatePath('/admin')
+  revalidatePath('/admin/tools')
   revalidatePath('/')
-  redirect('/admin')
+  redirect('/admin/tools')
 }
 
 export async function deleteTool(formData: FormData) {
@@ -66,6 +67,7 @@ export async function deleteTool(formData: FormData) {
     }
 
     revalidatePath('/admin')
+    revalidatePath('/admin/tools')
     revalidatePath('/')
-    redirect('/admin')
+    redirect('/admin/tools')
 }

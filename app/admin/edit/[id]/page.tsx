@@ -1,5 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
-import { updateTool, deleteTool } from './actions'
+import { updateTool } from './actions'
 import { redirect } from 'next/navigation'
 import DeleteButton from './DeleteButton'
 
@@ -16,7 +16,7 @@ export default async function EditToolPage({ params }: { params: Promise<{ id: s
     const tool = toolResponse.data
 
     if (!tool) {
-        redirect('/admin')
+        redirect('/admin/tools')
     }
 
     // 2. Extract unique categories and FILTER out nulls
