@@ -18,7 +18,7 @@ export default function Navbar() {
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden text-(--color-text-primary) text-2xl"
+              className="md:hidden text-(--color-text-primary) text-4xl"
             >
               ☰
             </button>

@@ -66,11 +66,11 @@ export const BeehiivForm: React.FC<BeehiivFormProps> = ({
 
     return (
         <div className={`p-4 ${className}`}>
-            <div className="text-center mb-6">
+            {/* <div className="text-center mb-6">
                 <p className="mx-auto max-w-800px text-(--color-text-secondary) md:text-xl font-inter">
                     {description}
                 </p>
-            </div>
+            </div> */}
 
             <div className="flex w-full flex-col items-center justify-center">
                 <div className="w-full max-w-600px">

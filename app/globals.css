@@ -4,7 +4,7 @@
 :root[data-theme='light'],
 :root:not([data-theme]) {
   /* Primary Colors */
-  --color-bg-primary: #ffffff;
+  --color-bg-primary: #f5f5f7;
   --color-bg-secondary: #f9fafb;
   --color-bg-tertiary: #f3f4f6;
   

@@ -46,7 +46,7 @@ export default function Tools({ tools }: ToolsProps) {
 
     return (
         <div className="space-y-4 bg-(--color-bg-primary)">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 max-w-[900px] mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 max-w-900px mx-auto">
 
                 {/* Mobile Dropdown */}
                 <div className="md:hidden relative w-full mb-6">

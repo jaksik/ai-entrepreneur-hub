@@ -5,7 +5,7 @@ import Link from 'next/link';
 export default function Footer() {
 
     return (
-        <footer className="mt-3 py-4 pb-0 border-t border-(--color-card-border)">
+        <footer className="mt-3 py-4 pb-0">
             <div className="flex flex-col items-center justify-center">
                 <p className="text-md text-(--color-text-secondary)">
                     © {new Date().getFullYear()} Sharp Startup LLC | Austin, TX 🇺🇸
