@@ -3,6 +3,36 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/utils/supabase/server'
 
+export async function createNewsletterForCuration(formData: FormData) {
+  const supabase = await createClient()
+  const db = supabase as any
+
+  const titleInput = formData.get('title')
+  const publishDateInput = formData.get('publish_date')
+
+  const title = typeof titleInput === 'string' ? titleInput.trim() : ''
+  const publishDateRaw = typeof publishDateInput === 'string' ? publishDateInput : ''
+
+  if (!title) {
+    throw new Error('Newsletter title is required')
+  }
+
+  const publish_date = publishDateRaw ? new Date(publishDateRaw).toISOString() : null
+
+  const { error } = await db.from('newsletters').insert({
+    title,
+    publish_date,
+    status: 'draft',
+  })
+
+  if (error) {
+    throw new Error('Failed to create newsletter')
+  }
+
+  revalidatePath('/admin/curation')
+  revalidatePath('/admin/newsletters')
+}
+
 export async function addArticleToNewsletter(articleId: number, newsletterId: number) {
   const supabase = await createClient()
   const db = supabase as any
@@ -34,7 +64,7 @@ export async function addArticleToNewsletter(articleId: number, newsletterId: nu
 
   const { data: article, error: articleError } = await db
     .from('articles')
-    .select('id, title, description, url, publisher')
+    .select('id, title, description, url, publisher, published_at')
     .eq('id', articleId)
     .single()
 
@@ -49,6 +79,7 @@ export async function addArticleToNewsletter(articleId: number, newsletterId: nu
     description: article.description,
     url: article.url,
     publisher: article.publisher,
+    published_at: article.published_at,
   })
 
   if (insertError) {
