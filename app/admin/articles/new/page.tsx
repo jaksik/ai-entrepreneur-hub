@@ -3,7 +3,7 @@ import { createArticle } from './actions'
 export default function NewArticlePage() {
   return (
     <div className="max-w-2xl mx-auto py-12">
-      <h1 className="type-title mb-8">Add New Article</h1>
+      <h1 className="type-title mb-8 text-(--color-text-primary)">Add New Article</h1>
 
       <form action={createArticle} className="space-y-6">
         <div>
@@ -12,7 +12,7 @@ export default function NewArticlePage() {
             name="title"
             type="text"
             required
-            className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+            className="mt-1 block w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) p-2 text-(--color-text-primary)"
           />
         </div>
 
@@ -23,7 +23,7 @@ export default function NewArticlePage() {
             type="url"
             required
             placeholder="https://..."
-            className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+            className="mt-1 block w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) p-2 text-(--color-text-primary)"
           />
         </div>
 
@@ -33,7 +33,7 @@ export default function NewArticlePage() {
             <input
               name="publisher"
               type="text"
-              className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+              className="mt-1 block w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) p-2 text-(--color-text-primary)"
             />
           </div>
 
@@ -42,7 +42,7 @@ export default function NewArticlePage() {
             <input
               name="category"
               type="text"
-              className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+              className="mt-1 block w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) p-2 text-(--color-text-primary)"
             />
           </div>
         </div>
@@ -52,13 +52,13 @@ export default function NewArticlePage() {
           <input
             name="published_at"
             type="datetime-local"
-            className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+            className="mt-1 block w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) p-2 text-(--color-text-primary)"
           />
         </div>
 
         <button
           type="submit"
-          className="type-body w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-black hover:bg-gray-800"
+          className="type-body flex w-full justify-center rounded-md bg-accent-primary px-4 py-3 text-white hover:bg-accent-hover"
         >
           Create Article
         </button>

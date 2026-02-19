@@ -5,6 +5,30 @@ type PageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
+function formatPublishedAt(value: string | null) {
+  if (!value) return 'No date'
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return 'No date'
+
+  return parsed.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function trimDescription(value: string | null | undefined) {
+  if (!value) return null
+
+  const maxLength = 140
+
+  const normalized = value.replace(/\s+/g, ' ').trim()
+  if (!normalized) return null
+
+  return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 3).trimEnd()}...` : normalized
+}
+
 export default async function CurationPage({ searchParams }: PageProps) {
   const supabase = await createClient()
   const db = supabase as any
@@ -43,7 +67,29 @@ export default async function CurationPage({ searchParams }: PageProps) {
   }
 
   const curatedArticleIds: number[] =
-    curatedArticles?.map((item: { article_id: number | null }) => item.article_id).filter(Boolean) || []
+    curatedArticles
+      ?.map((item: { article_id: number | null }) => item.article_id)
+      .filter((id: number | null): id is number => typeof id === 'number') || []
+
+  let curatedArticleMetaById = new Map<number, { published_at: string | null; publisher: string | null }>()
+
+  if (newsletterId && curatedArticleIds.length > 0) {
+    const { data: curatedArticleMeta, error: curatedArticleMetaError } = await db
+      .from('articles')
+      .select('id, published_at, publisher')
+      .in('id', curatedArticleIds)
+
+    if (curatedArticleMetaError) {
+      throw new Error('Failed to fetch curated article metadata')
+    }
+
+    curatedArticleMetaById = new Map(
+      (curatedArticleMeta || []).map((item: { id: number; published_at: string | null; publisher: string | null }) => [
+        item.id,
+        { published_at: item.published_at, publisher: item.publisher },
+      ])
+    )
+  }
 
   let inboxArticles: Array<{
     id: number
@@ -51,12 +97,13 @@ export default async function CurationPage({ searchParams }: PageProps) {
     description: string | null
     url: string | null
     publisher: string | null
+    published_at: string | null
   }> = []
 
   if (newsletterId) {
     let inboxQuery = db
       .from('articles')
-      .select('id, title, description, url, publisher')
+      .select('id, title, description, url, publisher, published_at')
       .order('id', { ascending: false })
 
     if (curatedArticleIds.length > 0) {
@@ -118,7 +165,7 @@ export default async function CurationPage({ searchParams }: PageProps) {
             </p>
           </header>
 
-          <div className="min-h-0 flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
             {newsletterId && inboxArticles?.length ? (
               inboxArticles.map(
                 (article: {
@@ -127,35 +174,42 @@ export default async function CurationPage({ searchParams }: PageProps) {
                   description: string | null
                   url: string | null
                   publisher: string | null
+                  published_at: string | null
                 }) => (
                   <article
                     key={article.id}
-                    className="rounded-lg border border-(--color-card-border) bg-(--color-card-bg) p-4"
+                    className="rounded-md border border-(--color-card-border) bg-(--color-card-bg) p-3"
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-2">
-                        <h3 className="type-subtitle text-(--color-text-primary)">
-                          {article.title || 'Untitled article'}
-                        </h3>
-                        {article.description ? (
-                          <p className="type-body text-(--color-text-secondary)">{article.description}</p>
-                        ) : null}
-                        <p className="type-caption text-(--color-text-secondary)">
-                          {article.publisher || 'Unknown publisher'}
-                        </p>
+                    <div className="flex items-start gap-3">
+                      <div className="min-w-34 shrink-0 pt-0.5 type-caption text-(--color-text-secondary)">
+                        <p>{formatPublishedAt(article.published_at)}</p>
+                        <p>{article.publisher || 'Unknown publisher'}</p>
+                      </div>
+
+                      <div className="min-w-0 flex-1 space-y-1">
                         {article.url ? (
                           <a
                             href={article.url}
                             target="_blank"
                             rel="noreferrer"
-                            className="type-caption text-accent-primary hover:underline"
+                            className="type-body font-medium text-(--color-text-primary) hover:text-accent-primary hover:underline"
                           >
-                            Open source
+                            {article.title || 'Untitled article'}
                           </a>
+                        ) : (
+                          <h3 className="type-body font-medium text-(--color-text-primary)">
+                            {article.title || 'Untitled article'}
+                          </h3>
+                        )}
+
+                        {trimDescription(article.description) ? (
+                          <p className="type-caption text-(--color-text-secondary)">
+                            {trimDescription(article.description)}
+                          </p>
                         ) : null}
                       </div>
 
-                      <form action={addArticleToNewsletter.bind(null, article.id, newsletterId)}>
+                      <form action={addArticleToNewsletter.bind(null, article.id, newsletterId)} className="ml-auto shrink-0">
                         <button
                           type="submit"
                           className="rounded-md border border-(--color-card-border) px-3 py-1.5 type-caption text-(--color-text-primary) hover:bg-(--color-bg-secondary)"
@@ -185,11 +239,12 @@ export default async function CurationPage({ searchParams }: PageProps) {
             </p>
           </header>
 
-          <div className="min-h-0 flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
             {newsletterId && curatedArticles?.length ? (
               curatedArticles.map(
                 (article: {
                   id: number
+                  article_id: number | null
                   title: string | null
                   description: string | null
                   url: string | null
@@ -199,34 +254,10 @@ export default async function CurationPage({ searchParams }: PageProps) {
                 }) => (
                   <article
                     key={article.id}
-                    className="rounded-lg border border-(--color-card-border) bg-(--color-card-bg) p-4"
+                    className="rounded-md border border-(--color-card-border) bg-(--color-card-bg) p-3"
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-2">
-                        <h3 className="type-subtitle text-(--color-text-primary)">
-                          {article.ai_title || article.title || 'Untitled article'}
-                        </h3>
-                        {(article.ai_description || article.description) ? (
-                          <p className="type-body text-(--color-text-secondary)">
-                            {article.ai_description || article.description}
-                          </p>
-                        ) : null}
-                        <p className="type-caption text-(--color-text-secondary)">
-                          {article.publisher || 'Unknown publisher'}
-                        </p>
-                        {article.url ? (
-                          <a
-                            href={article.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="type-caption text-accent-primary hover:underline"
-                          >
-                            Open source
-                          </a>
-                        ) : null}
-                      </div>
-
-                      <form action={removeArticleFromNewsletter.bind(null, article.id)}>
+                    <div className="flex items-start gap-3">
+                      <form action={removeArticleFromNewsletter.bind(null, article.id)} className="shrink-0">
                         <button
                           type="submit"
                           className="rounded-md border border-(--color-card-border) px-3 py-1.5 type-caption text-(--color-text-primary) hover:bg-(--color-bg-secondary)"
@@ -234,6 +265,42 @@ export default async function CurationPage({ searchParams }: PageProps) {
                           Remove
                         </button>
                       </form>
+
+                      <div className="min-w-0 flex-1 space-y-1">
+                        {article.url ? (
+                          <a
+                            href={article.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="type-body font-medium text-(--color-text-primary) hover:text-accent-primary hover:underline"
+                          >
+                            {article.ai_title || article.title || 'Untitled article'}
+                          </a>
+                        ) : (
+                          <h3 className="type-body font-medium text-(--color-text-primary)">
+                            {article.ai_title || article.title || 'Untitled article'}
+                          </h3>
+                        )}
+
+                        {trimDescription(article.ai_description || article.description) ? (
+                          <p className="type-caption text-(--color-text-secondary)">
+                            {trimDescription(article.ai_description || article.description)}
+                          </p>
+                        ) : null}
+                      </div>
+
+                      <div className="ml-auto min-w-34 shrink-0 pt-0.5 text-right type-caption text-(--color-text-secondary)">
+                        <p>
+                          {formatPublishedAt(
+                            article.article_id ? (curatedArticleMetaById.get(article.article_id)?.published_at ?? null) : null
+                          )}
+                        </p>
+                        <p>
+                          {article.publisher ||
+                            (article.article_id ? curatedArticleMetaById.get(article.article_id)?.publisher : null) ||
+                            'Unknown publisher'}
+                        </p>
+                      </div>
                     </div>
                   </article>
                 )

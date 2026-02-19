@@ -27,7 +27,7 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
   return (
     <div className="max-w-2xl mx-auto py-12">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="type-title">Edit Article</h1>
+        <h1 className="type-title text-(--color-text-primary)">Edit Article</h1>
         <DeleteButton id={article.id} />
       </div>
 
@@ -41,7 +41,7 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
             type="text"
             required
             defaultValue={article.title || ''}
-            className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+            className="mt-1 block w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) p-2 text-(--color-text-primary)"
           />
         </div>
 
@@ -52,7 +52,7 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
             type="url"
             required
             defaultValue={article.url || ''}
-            className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+            className="mt-1 block w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) p-2 text-(--color-text-primary)"
           />
         </div>
 
@@ -63,7 +63,7 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
               name="publisher"
               type="text"
               defaultValue={article.publisher || ''}
-              className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+              className="mt-1 block w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) p-2 text-(--color-text-primary)"
             />
           </div>
 
@@ -73,7 +73,7 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
               name="category"
               type="text"
               defaultValue={article.category || ''}
-              className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+              className="mt-1 block w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) p-2 text-(--color-text-primary)"
             />
           </div>
         </div>
@@ -84,13 +84,13 @@ export default async function EditArticlePage({ params }: { params: Promise<{ id
             name="published_at"
             type="datetime-local"
             defaultValue={toDateTimeLocal(article.published_at)}
-            className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+            className="mt-1 block w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) p-2 text-(--color-text-primary)"
           />
         </div>
 
         <button
           type="submit"
-          className="type-body w-full bg-black text-white p-3 rounded-md hover:bg-gray-800"
+          className="type-body w-full rounded-md bg-accent-primary p-3 text-white hover:bg-accent-hover"
         >
           Save Changes
         </button>

@@ -26,7 +26,7 @@ export default async function EditToolPage({ params }: { params: Promise<{ id: s
 	return (
 		<div className="max-w-2xl mx-auto py-12">
 			<div className="flex justify-between items-center mb-8">
-				<h1 className="type-title">Edit Tool</h1>
+				<h1 className="type-title text-(--color-text-primary)">Edit Tool</h1>
 
 				<DeleteButton id={tool.id} />
 			</div>
@@ -42,7 +42,7 @@ export default async function EditToolPage({ params }: { params: Promise<{ id: s
 						defaultValue={tool.name || ''} // FIX: Handle null
 						type="text"
 						required
-						className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+						className="mt-1 block w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) p-2 text-(--color-text-primary)"
 					/>
 				</div>
 
@@ -53,7 +53,7 @@ export default async function EditToolPage({ params }: { params: Promise<{ id: s
 						name="category"
 						defaultValue={tool.category || ''} // FIX: Handle null
 						required
-						className="mt-1 block w-full rounded-md border border-gray-300 p-2 bg-white"
+						className="mt-1 block w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) p-2 text-(--color-text-primary)"
 					>
 						{uniqueCategories.map((cat) => (
 							<option key={cat} value={cat} className="type-body">
@@ -72,7 +72,7 @@ export default async function EditToolPage({ params }: { params: Promise<{ id: s
 							defaultValue={tool.url || ''} // FIX: Handle null
 							type="url"
 							required
-							className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+							className="mt-1 block w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) p-2 text-(--color-text-primary)"
 						/>
 					</div>
 					<div>
@@ -81,7 +81,7 @@ export default async function EditToolPage({ params }: { params: Promise<{ id: s
 							name="affiliate_link"
 							defaultValue={tool.affiliate_link || ''} // FIX: Handle null
 							type="url"
-							className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+							className="mt-1 block w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) p-2 text-(--color-text-primary)"
 						/>
 					</div>
 				</div>
@@ -93,7 +93,7 @@ export default async function EditToolPage({ params }: { params: Promise<{ id: s
 						name="description"
 						defaultValue={tool.description || ''} // FIX: Handle null
 						rows={3}
-						className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+						className="mt-1 block w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) p-2 text-(--color-text-primary)"
 					/>
 				</div>
 
@@ -102,14 +102,14 @@ export default async function EditToolPage({ params }: { params: Promise<{ id: s
 					<label className="block type-caption mb-2">Current Logo</label>
 					{tool.logo_url && (
 						<div className="mb-4">
-							<img src={tool.logo_url} alt="Current Logo" className="w-16 h-16 object-contain border rounded p-1 bg-white" />
+							<img src={tool.logo_url} alt="Current Logo" className="w-16 h-16 object-contain rounded border border-(--color-card-border) bg-(--color-card-bg) p-1" />
 						</div>
 					)}
-					<label className="block type-caption text-gray-500 mb-1">Upload new logo to replace (optional)</label>
-					<input name="logo" type="file" accept="image/*" className="type-caption mt-1 block w-full text-gray-500" />
+					<label className="mb-1 block type-caption text-(--color-text-secondary)">Upload new logo to replace (optional)</label>
+					<input name="logo" type="file" accept="image/*" className="type-caption mt-1 block w-full text-(--color-text-secondary)" />
 				</div>
 
-				<button type="submit" className="type-body w-full bg-black text-white p-3 rounded-md hover:bg-gray-800">
+				<button type="submit" className="type-body w-full rounded-md bg-accent-primary p-3 text-white hover:bg-accent-hover">
 					Save Changes
 				</button>
 			</form>

@@ -1,6 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import AdminNavLinks from './AdminNavLinks'
+import { ThemeToggle } from '@/components/ThemeProvider/ThemeToggle'
 
 export default async function AdminLayout({
   children,
@@ -17,17 +18,18 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <nav className="bg-white shadow-sm mb-8">
+    <div className="min-h-screen bg-(--color-bg-primary)">
+      <nav className="mb-8 border-b border-(--color-card-border) bg-(--color-card-bg)">
         <div className="max-w-7xl mx-auto px-8 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-            <h1 className="type-subtitle">Admin Dashboard</h1>
+            <h1 className="type-subtitle text-(--color-text-primary)">Admin Dashboard</h1>
             <AdminNavLinks />
           </div>
           <div className="flex gap-4 items-center">
-            <span className="type-caption text-gray-500">{user.email}</span>
+            <ThemeToggle />
+            <span className="type-caption text-(--color-text-secondary)">{user.email}</span>
             <form action="/auth/signout" method="post">
-              <button className="type-caption text-red-600 hover:text-red-800">Sign Out</button>
+              <button className="type-caption text-(--color-text-secondary) hover:text-(--color-text-primary)">Sign Out</button>
             </form>
           </div>
         </div>

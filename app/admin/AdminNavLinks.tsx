@@ -28,8 +28,8 @@ export default function AdminNavLinks() {
           href={item.href}
           className={`type-caption px-3 py-1.5 rounded-md border transition ${
             isActive(item.href)
-              ? 'text-gray-900 border-gray-300 bg-gray-100'
-              : 'text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-100'
+              ? 'text-(--color-text-primary) border-(--color-card-border) bg-(--color-bg-secondary)'
+              : 'text-(--color-text-secondary) border-transparent hover:text-(--color-text-primary) hover:bg-(--color-bg-secondary)'
           }`}
           aria-current={isActive(item.href) ? 'page' : undefined}
         >

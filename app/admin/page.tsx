@@ -10,25 +10,25 @@ export default async function AdminPage() {
 
   return (
     <div>
-      <h2 className="type-title mb-6">Admin</h2>
+      <h2 className="type-title mb-6 text-(--color-text-primary)">Admin</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Link
           href="/admin/tools"
-          className="bg-white rounded-lg shadow p-6 hover:shadow-md transition"
+          className="rounded-lg border border-(--color-card-border) bg-(--color-card-bg) p-6 transition hover:bg-(--color-bg-secondary)"
         >
-          <p className="type-caption text-gray-500">Manage</p>
-          <h3 className="type-title mt-1">Tools</h3>
-          <p className="type-body text-gray-700 mt-2">{toolsCount ?? 0} total</p>
+          <p className="type-caption text-(--color-text-secondary)">Manage</p>
+          <h3 className="type-title mt-1 text-(--color-text-primary)">Tools</h3>
+          <p className="type-body mt-2 text-(--color-text-secondary)">{toolsCount ?? 0} total</p>
         </Link>
 
         <Link
           href="/admin/articles"
-          className="bg-white rounded-lg shadow p-6 hover:shadow-md transition"
+          className="rounded-lg border border-(--color-card-border) bg-(--color-card-bg) p-6 transition hover:bg-(--color-bg-secondary)"
         >
-          <p className="type-caption text-gray-500">Manage</p>
-          <h3 className="type-title mt-1">Articles</h3>
-          <p className="type-body text-gray-700 mt-2">{articlesCount ?? 0} total</p>
+          <p className="type-caption text-(--color-text-secondary)">Manage</p>
+          <h3 className="type-title mt-1 text-(--color-text-primary)">Articles</h3>
+          <p className="type-body mt-2 text-(--color-text-secondary)">{articlesCount ?? 0} total</p>
         </Link>
       </div>
     </div>

@@ -13,7 +13,7 @@ export default function DeleteButton({ id }: { id: number }) {
       }}
     >
       <input type="hidden" name="id" value={id} />
-      <button className="type-caption text-red-600 hover:text-red-800">
+      <button className="type-caption text-accent-primary hover:text-accent-hover">
         Delete Tool
       </button>
     </form>

@@ -7,6 +7,31 @@ export async function addArticleToNewsletter(articleId: number, newsletterId: nu
   const supabase = await createClient()
   const db = supabase as any
 
+  if (!Number.isInteger(articleId) || articleId <= 0) {
+    throw new Error('Invalid article id')
+  }
+
+  if (!Number.isInteger(newsletterId) || newsletterId <= 0) {
+    throw new Error('Invalid newsletter id')
+  }
+
+  const { data: existingAssignment, error: existingAssignmentError } = await db
+    .from('newsletter_articles')
+    .select('id, newsletter_id')
+    .eq('newsletter_id', newsletterId)
+    .eq('article_id', articleId)
+    .limit(1)
+    .maybeSingle()
+
+  if (existingAssignmentError) {
+    throw new Error(`Failed to check existing curation: ${existingAssignmentError.message}`)
+  }
+
+  if (existingAssignment) {
+    revalidatePath('/admin/curation')
+    return
+  }
+
   const { data: article, error: articleError } = await db
     .from('articles')
     .select('id, title, description, url, publisher')
@@ -27,7 +52,12 @@ export async function addArticleToNewsletter(articleId: number, newsletterId: nu
   })
 
   if (insertError) {
-    throw new Error('Failed to add article to newsletter')
+    if (insertError.code === '23505') {
+      revalidatePath('/admin/curation')
+      return
+    }
+
+    throw new Error(`Failed to add article to newsletter: ${insertError.message}`)
   }
 
   revalidatePath('/admin/curation')
