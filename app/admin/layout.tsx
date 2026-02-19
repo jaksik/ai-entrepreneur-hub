@@ -18,9 +18,9 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-(--color-bg-primary)">
+    <div className="min-h-screen overflow-x-hidden bg-(--color-bg-primary)">
       <nav className="mb-8 border-b border-(--color-card-border) bg-(--color-card-bg)">
-        <div className="max-w-7xl mx-auto px-8 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <div className="flex w-full flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-8">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
             <h1 className="type-subtitle text-(--color-text-primary)">Admin Dashboard</h1>
             <AdminNavLinks />
@@ -34,7 +34,7 @@ export default async function AdminLayout({
           </div>
         </div>
       </nav>
-      <main className="max-w-7xl mx-auto px-8">
+      <main className="w-full overflow-x-hidden px-4 pb-8 md:px-8">
         {children}
       </main>
     </div>

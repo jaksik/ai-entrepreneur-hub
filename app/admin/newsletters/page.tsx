@@ -182,8 +182,8 @@ export default async function NewslettersPage({ searchParams }: PageProps) {
   const statusTone = getStatusTone(selectedStatus)
 
   return (
-    <section className="relative left-1/2 w-screen -translate-x-1/2 min-h-[calc(100vh-8rem)] bg-(--color-bg-primary)">
-      <div className="w-full px-4 pb-8 md:px-8">
+    <section className="min-h-[calc(100vh-8rem)] w-full bg-(--color-bg-primary)">
+      <div className="w-full pb-8">
         <div className="rounded-xl border border-(--color-card-border) bg-(--color-card-bg)">
           <div className="border-b border-(--color-card-border) bg-(--color-bg-secondary) p-4 md:p-5">
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">

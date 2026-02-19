@@ -24,7 +24,7 @@ export default function NewsletterSelect({
     <select
       value={activeNewsletterId ? String(activeNewsletterId) : ''}
       onChange={handleChange}
-      className="rounded-md border border-(--color-card-border) bg-(--color-card-bg) px-3 py-2 type-body text-(--color-text-primary)"
+      className="w-full rounded-md border border-(--color-card-border) bg-(--color-card-bg) px-3 py-2 type-body text-(--color-text-primary)"
     >
       <option value="">Select newsletter</option>
       {newsletters?.map((newsletter: { id: number; title: string | null }) => (

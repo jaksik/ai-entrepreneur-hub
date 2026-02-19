@@ -23,7 +23,7 @@ export default function CreateNewsletterModal() {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 type-caption font-semibold text-white shadow-sm hover:bg-green-700"
+        className="type-body rounded-md border border-(--color-card-border) bg-(--color-card-bg) px-4 py-2 text-(--color-text-primary) hover:bg-(--color-bg-secondary)"
       >
         + Create Newsletter
       </button>

@@ -8,7 +8,7 @@ export default async function AdminToolsPage() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="type-title text-(--color-text-primary)">Your Tools</h2>
+        <h2 className="type-title text-(--color-text-primary)">AI-Tool & Software Library</h2>
         <Link
           href="/admin/tools/new"
           className="type-body rounded-md border border-(--color-card-border) bg-(--color-card-bg) px-4 py-2 text-(--color-text-primary) hover:bg-(--color-bg-secondary)"

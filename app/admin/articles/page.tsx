@@ -11,7 +11,7 @@ export default async function AdminArticlesPage() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="type-title text-(--color-text-primary)">Your Articles</h2>
+        <h2 className="type-title text-(--color-text-primary)">AI-News Articles</h2>
         <Link
           href="/admin/articles/new"
           className="type-body rounded-md border border-(--color-card-border) bg-(--color-card-bg) px-4 py-2 text-(--color-text-primary) hover:bg-(--color-bg-secondary)"
