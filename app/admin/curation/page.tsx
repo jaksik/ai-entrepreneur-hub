@@ -1,5 +1,8 @@
 import { createClient } from '@/utils/supabase/server'
 import { addArticleToNewsletter, removeArticleFromNewsletter } from './actions'
+import CreateNewsletterModal from './CreateNewsletterModal'
+import NewsletterSelect from './NewsletterSelect'
+import CategorySelect from '@/app/admin/newsletters/CategorySelect'
 
 type PageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -54,10 +57,14 @@ export default async function CurationPage({ searchParams }: PageProps) {
       ? parsedNewsletterId
       : null
 
+  const selectedNewsletter = newsletterId
+    ? newsletters?.find((newsletter: { id: number }) => newsletter.id === newsletterId) || null
+    : null
+
   const { data: curatedArticles, error: curatedError } = newsletterId
     ? await db
         .from('newsletter_articles')
-        .select('id, newsletter_id, article_id, title, description, url, publisher, ai_title, ai_description')
+        .select('id, newsletter_id, article_id, title, description, url, publisher, ai_title, ai_description, newsletter_category')
         .eq('newsletter_id', newsletterId)
         .order('id', { ascending: false })
     : { data: [], error: null }
@@ -122,42 +129,10 @@ export default async function CurationPage({ searchParams }: PageProps) {
   return (
     <section className="relative left-1/2 w-screen -translate-x-1/2 min-h-[calc(100vh-8rem)] bg-(--color-bg-primary)">
       <div className="flex h-[calc(100vh-8rem)] w-full flex-col">
-        <header className="border-b border-(--color-card-border) bg-(--color-bg-primary) p-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="type-title text-(--color-text-primary)">Curation</h1>
-              <p className="type-caption text-(--color-text-secondary)">
-                Select a newsletter to curate before adding articles.
-              </p>
-            </div>
-
-            <form action="/admin/curation" method="get" className="flex items-center gap-2">
-              <select
-                name="newsletterId"
-                defaultValue={newsletterId ? String(newsletterId) : ''}
-                className="rounded-md border border-(--color-card-border) bg-(--color-card-bg) px-3 py-2 type-body text-(--color-text-primary)"
-              >
-                <option value="">Select newsletter</option>
-                {newsletters?.map((newsletter: { id: number; title: string | null }) => (
-                  <option key={newsletter.id} value={newsletter.id}>
-                    {newsletter.title || `Newsletter #${newsletter.id}`}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="submit"
-                className="rounded-md border border-(--color-card-border) px-3 py-2 type-caption text-(--color-text-primary) hover:bg-(--color-bg-secondary)"
-              >
-                Load
-              </button>
-            </form>
-          </div>
-        </header>
-
         <div className="grid min-h-0 flex-1 w-full grid-cols-1 md:grid-cols-2">
         <section className="flex min-h-0 flex-col border-b border-(--color-card-border) md:border-r md:border-b-0">
-          <header className="border-b border-(--color-card-border) p-4">
-            <h2 className="type-title text-(--color-text-primary)">Inbox</h2>
+          <header className="border-b border-(--color-card-border) text-center p-4">
+            <h2 className="type-title text-(--color-text-primary)">AI-News Database</h2>
             <p className="type-caption text-(--color-text-secondary)">
               {newsletterId
                 ? `Articles not yet added to newsletter #${newsletterId}`
@@ -212,9 +187,10 @@ export default async function CurationPage({ searchParams }: PageProps) {
                       <form action={addArticleToNewsletter.bind(null, article.id, newsletterId)} className="ml-auto shrink-0">
                         <button
                           type="submit"
-                          className="rounded-md border border-(--color-card-border) px-3 py-1.5 type-caption text-(--color-text-primary) hover:bg-(--color-bg-secondary)"
+                          className="rounded-md border border-(--color-card-border) px-2 text-lg text-green-500"
+                          title="Add to newsletter"
                         >
-                          Add
+                          ✓
                         </button>
                       </form>
                     </div>
@@ -231,12 +207,24 @@ export default async function CurationPage({ searchParams }: PageProps) {
 
         <section className="flex min-h-0 flex-col">
           <header className="border-b border-(--color-card-border) p-4">
-            <h2 className="type-title text-(--color-text-primary)">Curated</h2>
-            <p className="type-caption text-(--color-text-secondary)">
-              {newsletterId
-                ? `Articles currently assigned to newsletter #${newsletterId}`
-                : 'Select a newsletter to view curated articles'}
-            </p>
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                {newsletterId ? (
+                  <>
+                    <p className="type-caption text-(--color-text-secondary)">Curating Newsletter:</p>
+                    <p className="type-title text-(--color-text-primary)">
+                      {selectedNewsletter?.title || `Newsletter #${newsletterId}`}
+                    </p>
+                  </>
+                ) : (
+                  <p className="type-title text-(--color-text-primary)">Select a Newsletter to Curate</p>
+                )}
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <CreateNewsletterModal />
+                <NewsletterSelect newsletters={newsletters || []} activeNewsletterId={newsletterId} />
+              </div>
+            </div>
           </header>
 
           <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
@@ -251,6 +239,7 @@ export default async function CurationPage({ searchParams }: PageProps) {
                   publisher: string | null
                   ai_title: string | null
                   ai_description: string | null
+                  newsletter_category: string | null
                 }) => (
                   <article
                     key={article.id}
@@ -260,9 +249,10 @@ export default async function CurationPage({ searchParams }: PageProps) {
                       <form action={removeArticleFromNewsletter.bind(null, article.id)} className="shrink-0">
                         <button
                           type="submit"
-                          className="rounded-md border border-(--color-card-border) px-3 py-1.5 type-caption text-(--color-text-primary) hover:bg-(--color-bg-secondary)"
+                          className="rounded-md border border-(--color-card-border) px-2 text-lg text-red-500"
+                          title="Remove from newsletter"
                         >
-                          Remove
+                          ✕
                         </button>
                       </form>
 
@@ -289,17 +279,20 @@ export default async function CurationPage({ searchParams }: PageProps) {
                         ) : null}
                       </div>
 
-                      <div className="ml-auto min-w-34 shrink-0 pt-0.5 text-right type-caption text-(--color-text-secondary)">
-                        <p>
+                      <div className="ml-auto min-w-40 shrink-0 pt-0.5 text-right space-y-1">
+                        <p className="type-caption text-(--color-text-secondary)">
                           {formatPublishedAt(
                             article.article_id ? (curatedArticleMetaById.get(article.article_id)?.published_at ?? null) : null
                           )}
                         </p>
-                        <p>
+                        <p className="type-caption text-(--color-text-secondary)">
                           {article.publisher ||
                             (article.article_id ? curatedArticleMetaById.get(article.article_id)?.publisher : null) ||
                             'Unknown publisher'}
                         </p>
+                        <div className="pt-1">
+                          <CategorySelect articleId={article.id} currentCategory={article.newsletter_category} />
+                        </div>
                       </div>
                     </div>
                   </article>

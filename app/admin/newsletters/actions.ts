@@ -8,6 +8,7 @@ type UpdateFields = {
   description?: string | null
   ai_title?: string | null
   ai_description?: string | null
+  newsletter_category?: string | null
 }
 
 export async function createNewsletter(formData: FormData) {
@@ -36,6 +37,49 @@ export async function createNewsletter(formData: FormData) {
   revalidatePath('/admin/newsletters')
 }
 
+export async function updateNewsletterDetails(formData: FormData) {
+  const supabase = await createClient()
+  const db = supabase as any
+
+  const rawNewsletterId = formData.get('newsletter_id')
+  const newsletterId = Number(rawNewsletterId)
+
+  if (!newsletterId || Number.isNaN(newsletterId)) {
+    throw new Error('Valid newsletter id is required')
+  }
+
+  const titleInput = formData.get('title')
+  const subtitleInput = formData.get('sub_title')
+  const statusInput = formData.get('status')
+
+  const title = typeof titleInput === 'string' ? titleInput.trim() : ''
+  const intro = typeof subtitleInput === 'string' ? subtitleInput.trim() : ''
+  const status = typeof statusInput === 'string' ? statusInput.trim() : ''
+
+  if (!title) {
+    throw new Error('Newsletter title is required')
+  }
+
+  if (!status) {
+    throw new Error('Newsletter status is required')
+  }
+
+  const { error } = await db
+    .from('newsletters')
+    .update({
+      title,
+      intro: intro || null,
+      status,
+    })
+    .eq('id', newsletterId)
+
+  if (error) {
+    throw new Error('Failed to update newsletter details')
+  }
+
+  revalidatePath('/admin/newsletters')
+}
+
 export async function updateArticleContent(
   newsletterArticleId: number,
   updatedFields: UpdateFields
@@ -43,12 +87,13 @@ export async function updateArticleContent(
   const supabase = await createClient()
   const db = supabase as any
 
-  const payload = {
-    title: updatedFields.title ?? null,
-    description: updatedFields.description ?? null,
-    ai_title: updatedFields.ai_title ?? null,
-    ai_description: updatedFields.ai_description ?? null,
-  }
+  const payload: any = {}
+  
+  if (updatedFields.title !== undefined) payload.title = updatedFields.title
+  if (updatedFields.description !== undefined) payload.description = updatedFields.description
+  if (updatedFields.ai_title !== undefined) payload.ai_title = updatedFields.ai_title
+  if (updatedFields.ai_description !== undefined) payload.ai_description = updatedFields.ai_description
+  if (updatedFields.newsletter_category !== undefined) payload.newsletter_category = updatedFields.newsletter_category
 
   const { error } = await db
     .from('newsletter_articles')
