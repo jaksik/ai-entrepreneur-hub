@@ -27,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${fontBody.variable} ${fontHeading.variable}`}>
+    <html lang="en" className={`${fontBody.variable} ${fontHeading.variable}`} suppressHydrationWarning>
       <body className="antialiased">
         <ThemeProvider>
           <Navbar />

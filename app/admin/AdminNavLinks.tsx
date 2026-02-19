@@ -7,14 +7,17 @@ const navItems = [
   { href: '/admin', label: 'Dashboard' },
   { href: '/admin/tools', label: 'Tools' },
   { href: '/admin/articles', label: 'Articles' },
+  { href: '/admin/newsletters', label: 'Newsletters' },
+  { href: '/admin/curation', label: 'Curation' },
 ]
 
 export default function AdminNavLinks() {
   const pathname = usePathname()
 
   const isActive = (href: string) => {
-    if (href === '/admin') return pathname === '/admin'
-    return pathname === href || pathname.startsWith(`${href}/`)
+    const baseHref = href.split('?')[0]
+    if (baseHref === '/admin') return pathname === '/admin'
+    return pathname === baseHref || pathname.startsWith(`${baseHref}/`)
   }
 
   return (

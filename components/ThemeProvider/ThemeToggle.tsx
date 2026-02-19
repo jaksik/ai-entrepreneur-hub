@@ -4,7 +4,7 @@ import { useTheme } from './index';
 import styles from './ThemeToggle.module.css';
 
 export function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme();
+  const { toggleTheme } = useTheme();
 
   return (
     <button
@@ -12,7 +12,7 @@ export function ThemeToggle() {
       className={styles.toggle}
       aria-label="Toggle dark mode"
     >
-      {theme === 'light' ? '🌙' : '☀️'}
+      🌓
     </button>
   );
 }
