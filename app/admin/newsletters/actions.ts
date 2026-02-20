@@ -13,7 +13,7 @@ type UpdateFields = {
 
 export async function createNewsletter(formData: FormData) {
   const supabase = await createClient()
-  const db = supabase as any
+  const db = supabase
 
   const title = (formData.get('title') as string)?.trim()
   const publishDateInput = formData.get('publish_date') as string
@@ -39,7 +39,7 @@ export async function createNewsletter(formData: FormData) {
 
 export async function updateNewsletterDetails(formData: FormData) {
   const supabase = await createClient()
-  const db = supabase as any
+  const db = supabase
 
   const rawNewsletterId = formData.get('newsletter_id')
   const newsletterId = Number(rawNewsletterId)
@@ -75,12 +75,42 @@ export async function updateNewsletterDetails(formData: FormData) {
   revalidatePath(`/admin/newsletters/${newsletterId}/generate`)
 }
 
+export async function updateNewsletterPublishDate(formData: FormData) {
+  const supabase = await createClient()
+  const db = supabase
+
+  const rawNewsletterId = formData.get('newsletter_id')
+  const newsletterId = Number(rawNewsletterId)
+
+  if (!newsletterId || Number.isNaN(newsletterId)) {
+    throw new Error('Valid newsletter id is required')
+  }
+
+  const publishDateInput = formData.get('publish_date')
+  const publishDateRaw = typeof publishDateInput === 'string' ? publishDateInput : ''
+  const publish_date = publishDateRaw ? new Date(publishDateRaw).toISOString() : null
+
+  const { error } = await db
+    .from('newsletters')
+    .update({ publish_date })
+    .eq('id', newsletterId)
+
+  if (error) {
+    throw new Error('Failed to update newsletter publish date')
+  }
+
+  revalidatePath('/admin/newsletters')
+  revalidatePath(`/admin/newsletters/${newsletterId}/curate`)
+  revalidatePath(`/admin/newsletters/${newsletterId}/design`)
+  revalidatePath(`/admin/newsletters/${newsletterId}/generate`)
+}
+
 export async function updateArticleContent(
   newsletterArticleId: number,
   updatedFields: UpdateFields
 ) {
   const supabase = await createClient()
-  const db = supabase as any
+  const db = supabase
 
   const { data: assignment, error: assignmentError } = await db
     .from('newsletter_articles')
@@ -125,7 +155,7 @@ export async function generateAiSnippet(
   originalDescription: string
 ) {
   const supabase = await createClient()
-  const db = supabase as any
+  const db = supabase
 
   const { data: assignment, error: assignmentError } = await db
     .from('newsletter_articles')
@@ -167,7 +197,7 @@ export async function generateAiSnippet(
 
 export async function getNewsletterBeehiivData(newsletterId: number) {
   const supabase = await createClient()
-  const db = supabase as any
+  const db = supabase
 
   if (!newsletterId || Number.isNaN(newsletterId)) {
     throw new Error('Valid newsletter id is required')

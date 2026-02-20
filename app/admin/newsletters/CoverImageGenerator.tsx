@@ -153,7 +153,7 @@ async function generateNewsletterCoverImage(formData: FormData) {
   'use server'
 
   const supabase = await createClient()
-  const db = supabase as any
+  const db = supabase
 
   const rawNewsletterId = formData.get('newsletter_id')
   const newsletterId = Number(rawNewsletterId)
@@ -223,7 +223,7 @@ async function setNewsletterCoverImage(formData: FormData) {
   'use server'
 
   const supabase = await createClient()
-  const db = supabase as any
+  const db = supabase
 
   const rawNewsletterId = formData.get('newsletter_id')
   const newsletterId = Number(rawNewsletterId)
@@ -275,7 +275,7 @@ export default function CoverImageGenerator({
   return (
     <details className="rounded-lg border border-(--color-card-border) bg-(--color-card-bg)">
       <summary className="cursor-pointer select-none px-3 py-2 type-caption text-(--color-text-primary)">
-        Cover Image Generator
+        Cover Image
       </summary>
 
       <div className="space-y-3 border-t border-(--color-card-border) p-3">

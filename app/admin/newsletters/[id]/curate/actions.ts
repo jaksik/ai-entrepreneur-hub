@@ -5,7 +5,7 @@ import { createClient } from '@/utils/supabase/server'
 
 export async function addArticleToNewsletter(articleId: number, newsletterId: number) {
   const supabase = await createClient()
-  const db = supabase as any
+  const db = supabase
 
   if (!Number.isInteger(articleId) || articleId <= 0) {
     throw new Error('Invalid article id')
@@ -75,7 +75,7 @@ export async function addArticleToNewsletter(articleId: number, newsletterId: nu
 
 export async function removeArticleFromNewsletter(newsletterArticleId: number) {
   const supabase = await createClient()
-  const db = supabase as any
+  const db = supabase
 
   const { data: assignment, error: assignmentError } = await db
     .from('newsletter_articles')

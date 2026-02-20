@@ -13,27 +13,29 @@ export default function NewsletterTabs({ newsletterId }: { newsletterId: number 
   const pathname = usePathname()
 
   return (
-    <div className="rounded-2xl border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        {tabs.map((tab) => {
-          const href = `/admin/newsletters/${newsletterId}/${tab.key}`
-          const isActive = pathname === href
+    <div className="w-full flex justify-center">
+      <div className="inline-flex rounded-lg border border-(--color-card-border) bg-(--color-bg-secondary) p-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {tabs.map((tab) => {
+            const href = `/admin/newsletters/${newsletterId}/${tab.key}`
+            const isActive = pathname === href
 
-          return (
-            <Link
-              key={tab.key}
-              href={href}
-              className={`rounded-2xl px-5 py-6 text-center text-4xl font-semibold transition ${
-                isActive
-                  ? 'bg-(--color-card-bg) text-(--color-text-primary)'
-                  : 'text-(--color-text-primary) hover:bg-(--color-card-bg)'
-              }`}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              {tab.label}
-            </Link>
-          )
-        })}
+            return (
+              <Link
+                key={tab.key}
+                href={href}
+                className={`rounded-md px-3 py-1.5 type-caption font-medium transition ${
+                  isActive
+                    ? 'bg-(--color-card-bg) text-(--color-text-primary)'
+                    : 'text-(--color-text-primary) hover:bg-(--color-card-bg)'
+                }`}
+                aria-current={isActive ? 'page' : undefined}
+              >
+                {tab.label}
+              </Link>
+            )
+          })}
+        </div>
       </div>
     </div>
   )

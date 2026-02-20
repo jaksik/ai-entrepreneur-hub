@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
+import CreateNewsletterModal from './CreateNewsletterModal'
 
 function formatPublishedAt(value: string | null) {
   if (!value) return 'Not set'
@@ -16,7 +17,7 @@ function formatPublishedAt(value: string | null) {
 
 export default async function NewslettersPage() {
   const supabase = await createClient()
-  const db = supabase as any
+  const db = supabase
 
   const { data: newsletters, error } = await db
     .from('newsletters')
@@ -31,12 +32,7 @@ export default async function NewslettersPage() {
     <section className="w-full bg-(--color-bg-primary)">
       <div className="mb-6 flex items-center justify-between">
         <h2 className="type-title text-(--color-text-primary)">Newsletters</h2>
-        <Link
-          href="/admin/newsletters/new"
-          className="type-body rounded-md border border-(--color-card-border) bg-(--color-card-bg) px-4 py-2 text-(--color-text-primary) hover:bg-(--color-bg-secondary)"
-        >
-          Create Newsletter
-        </Link>
+        <CreateNewsletterModal />
       </div>
 
       <div className="overflow-hidden rounded-xl border border-(--color-card-border) bg-(--color-card-bg)">

@@ -84,7 +84,7 @@ export default async function NewsletterCuratePage({ params }: PageProps) {
   }
 
   const supabase = await createClient()
-  const db = supabase as any
+  const db = supabase
 
   const { data: selectedNewsletter, error: newsletterError } = await db
     .from('newsletters')
@@ -167,9 +167,9 @@ export default async function NewsletterCuratePage({ params }: PageProps) {
 
   return (
     <section className="w-full bg-(--color-bg-primary)">
-      <div className="mb-6">
+      {/* <div className="mb-6">
         <h2 className="type-title text-(--color-text-primary)">Article Curation</h2>
-      </div>
+      </div> */}
 
       <div className="mb-4 rounded-xl border border-(--color-card-border) bg-(--color-card-bg) p-4">
         <p className="type-caption text-(--color-text-secondary)">Curating newsletter:</p>

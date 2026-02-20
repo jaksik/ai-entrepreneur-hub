@@ -179,7 +179,7 @@ export default function GenerateClient({ newsletterId }: { newsletterId: number 
     <section className="w-full rounded-xl border border-(--color-card-border) bg-(--color-card-bg) p-5">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <h2 className="type-subtitle text-(--color-text-primary)">Beehiiv Newsletter Copy</h2>
+          {/* <h2 className="type-subtitle text-(--color-text-primary)">Beehiiv Newsletter Copy</h2> */}
           <p className="type-caption text-(--color-text-secondary)">
             {payload?.newsletter?.title || 'Newsletter Preview'}
           </p>

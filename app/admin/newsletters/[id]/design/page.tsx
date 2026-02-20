@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server'
 import { updateNewsletterDetails } from '../../actions'
 import CategorySelect from '../../CategorySelect'
 import CoverImageGenerator from '../../CoverImageGenerator'
+import ScheduledDateEditor from './ScheduledDateEditor'
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -114,7 +115,7 @@ export default async function NewsletterDesignPage({ params }: PageProps) {
   }
 
   const supabase = await createClient()
-  const db = supabase as any
+  const db = supabase
 
   const { data: selectedNewsletter, error: newsletterError } = await db
     .from('newsletters')
@@ -170,22 +171,16 @@ export default async function NewsletterDesignPage({ params }: PageProps) {
 
   return (
     <section className="min-h-[calc(100vh-8rem)] w-full bg-(--color-bg-primary)">
-      <div className="mb-6 flex justify-between items-center">
-        <h2 className="type-title text-(--color-text-primary)">Newsletter Design</h2>
-      </div>
-
       <div className="w-full pb-8">
         <div className="rounded-xl border border-(--color-card-border) bg-(--color-card-bg)">
           <div className="border-b border-(--color-card-border) bg-(--color-bg-secondary) p-4 md:p-5">
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
               <div>
                 <div className="flex flex-wrap items-center gap-2 justify-start">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-(--color-card-border) bg-(--color-card-bg) px-4 py-1.5">
-                    <span className="type-caption text-(--color-text-secondary)">Scheduled Date:</span>
-                    <span className="type-caption font-medium text-(--color-text-primary)">
-                      {selectedNewsletter.publish_date ? formatPublishedAt(selectedNewsletter.publish_date) : 'Not set'}
-                    </span>
-                  </div>
+                  <ScheduledDateEditor
+                    newsletterId={selectedNewsletter.id}
+                    publishDate={selectedNewsletter.publish_date}
+                  />
                   <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 ${statusTone.container}`}>
                     <span className={`h-2 w-2 rounded-full ${statusTone.dot}`} aria-hidden />
                     <span className="type-caption">Status</span>

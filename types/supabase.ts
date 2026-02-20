@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           id: number
           title: string | null
+          description: string | null
           url: string | null
           publisher: string | null
           category: string | null
@@ -27,6 +28,7 @@ export type Database = {
         Insert: {
           id?: never
           title?: string | null
+          description?: string | null
           url?: string | null
           publisher?: string | null
           category?: string | null
@@ -36,11 +38,111 @@ export type Database = {
         Update: {
           id?: never
           title?: string | null
+          description?: string | null
           url?: string | null
           publisher?: string | null
           category?: string | null
           published_at?: string | null
           created_at?: string
+        }
+        Relationships: []
+      }
+      newsletter_articles: {
+        Row: {
+          id: number
+          newsletter_id: number
+          article_id: number | null
+          title: string | null
+          description: string | null
+          url: string | null
+          publisher: string | null
+          published_at: string | null
+          ai_title: string | null
+          ai_description: string | null
+          newsletter_category: string | null
+        }
+        Insert: {
+          id?: never
+          newsletter_id: number
+          article_id?: number | null
+          title?: string | null
+          description?: string | null
+          url?: string | null
+          publisher?: string | null
+          published_at?: string | null
+          ai_title?: string | null
+          ai_description?: string | null
+          newsletter_category?: string | null
+        }
+        Update: {
+          id?: never
+          newsletter_id?: number
+          article_id?: number | null
+          title?: string | null
+          description?: string | null
+          url?: string | null
+          publisher?: string | null
+          published_at?: string | null
+          ai_title?: string | null
+          ai_description?: string | null
+          newsletter_category?: string | null
+        }
+        Relationships: []
+      }
+      newsletter_images: {
+        Row: {
+          id: number
+          newsletter_id: number
+          blob_url: string | null
+          prompt: string | null
+          provider: string | null
+          model: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: never
+          newsletter_id: number
+          blob_url?: string | null
+          prompt?: string | null
+          provider?: string | null
+          model?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: never
+          newsletter_id?: number
+          blob_url?: string | null
+          prompt?: string | null
+          provider?: string | null
+          model?: string | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      newsletters: {
+        Row: {
+          id: number
+          title: string | null
+          publish_date: string | null
+          status: string | null
+          intro: string | null
+          cover_image: string | null
+        }
+        Insert: {
+          id?: never
+          title?: string | null
+          publish_date?: string | null
+          status?: string | null
+          intro?: string | null
+          cover_image?: string | null
+        }
+        Update: {
+          id?: never
+          title?: string | null
+          publish_date?: string | null
+          status?: string | null
+          intro?: string | null
+          cover_image?: string | null
         }
         Relationships: []
       }

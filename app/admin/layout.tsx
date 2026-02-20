@@ -1,4 +1,5 @@
 import { createClient } from '@/utils/supabase/server'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import AdminNavLinks from './AdminNavLinks'
 import { ThemeToggle } from '@/components/ThemeProvider/ThemeToggle'
@@ -22,7 +23,9 @@ export default async function AdminLayout({
       <nav className="mb-8 border-b border-(--color-card-border) bg-(--color-card-bg)">
         <div className="flex w-full flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-8">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-            <h1 className="type-subtitle text-(--color-text-primary)">Admin Dashboard</h1>
+            <Link href="/admin" className="type-subtitle text-(--color-text-primary) hover:text-accent-primary">
+              Admin Dashboard
+            </Link>
             <AdminNavLinks />
           </div>
           <div className="flex gap-4 items-center">
