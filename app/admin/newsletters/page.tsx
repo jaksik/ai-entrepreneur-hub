@@ -5,6 +5,7 @@ import {
 import NewsletterSelector from './NewsletterSelector'
 import CategorySelect from './CategorySelect'
 import BeehiivCopyModal from './BeehiivCopyModal'
+import CoverImageGenerator from './CoverImageGenerator'
 
 type PageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -129,7 +130,7 @@ export default async function NewslettersPage({ searchParams }: PageProps) {
 
   const { data: newsletters, error: newslettersError } = await db
     .from('newsletters')
-    .select('id, title, publish_date, intro, status')
+    .select('id, title, publish_date, intro, status, cover_image')
     .order('publish_date', { ascending: false, nullsFirst: false })
 
   if (newslettersError) {
@@ -147,9 +148,22 @@ export default async function NewslettersPage({ searchParams }: PageProps) {
         publish_date: string | null
         intro: string | null
         status: string | null
+        cover_image: string | null
       }) => newsletter.id === safeActiveId
     )
     : null
+
+  const { data: newsletterImages, error: newsletterImagesError } = safeActiveId
+    ? await db
+      .from('newsletter_images')
+      .select('id, newsletter_id, blob_url, prompt, provider, model, created_at')
+      .eq('newsletter_id', safeActiveId)
+      .order('created_at', { ascending: false })
+    : { data: null, error: null }
+
+  if (newsletterImagesError) {
+    throw new Error('Failed to fetch newsletter images')
+  }
 
   const { data: curatedArticles, error: articlesError } = safeActiveId
     ? await db
@@ -253,45 +267,58 @@ export default async function NewslettersPage({ searchParams }: PageProps) {
 
             <div className="mt-4">
               {selectedNewsletter ? (
-                <form
-                  action={updateNewsletterDetails}
-                  className="grid grid-cols-1 gap-3 rounded-lg border border-(--color-card-border) bg-(--color-card-bg) p-3 md:grid-cols-12"
-                >
-                  <input type="hidden" name="newsletter_id" value={String(selectedNewsletter.id)} />
+                <>
+                  <details className="rounded-lg border border-(--color-card-border) bg-(--color-card-bg)">
+                    <summary className="cursor-pointer select-none px-3 py-2 type-caption text-(--color-text-primary)">
+                      Newsletter Details
+                    </summary>
+                    <div className="border-t border-(--color-card-border) p-3">
+                      <form
+                        action={updateNewsletterDetails}
+                        className="grid grid-cols-1 gap-3 md:grid-cols-12"
+                      >
+                        <input type="hidden" name="newsletter_id" value={String(selectedNewsletter.id)} />
 
-                  <div className="md:col-span-12">
-                    <label className="mb-1 block type-caption text-(--color-text-secondary)">Title</label>
-                    <input
-                      type="text"
-                      name="title"
-                      required
-                      defaultValue={selectedNewsletter.title || ''}
-                      className="w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) px-3 py-2 type-body text-(--color-text-primary) focus:outline-none"
-                    />
-                  </div>
+                        <div className="md:col-span-12">
+                          <label className="mb-1 block type-caption text-(--color-text-secondary)">Title</label>
+                          <input
+                            type="text"
+                            name="title"
+                            required
+                            defaultValue={selectedNewsletter.title || ''}
+                            className="w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) px-3 py-2 type-body text-(--color-text-primary) focus:outline-none"
+                          />
+                        </div>
 
-                  <div className="md:col-span-12">
-                    <label className="mb-1 block type-caption text-(--color-text-secondary)">Sub-title</label>
-                    <input
-                      type="text"
-                      name="sub_title"
-                      defaultValue={selectedNewsletter.intro || ''}
-                      placeholder="Short intro line for this newsletter"
-                      className="w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) px-3 py-2 type-body text-(--color-text-primary) focus:outline-none"
-                    />
-                  </div>
+                        <div className="md:col-span-12">
+                          <label className="mb-1 block type-caption text-(--color-text-secondary)">Sub-title</label>
+                          <input
+                            type="text"
+                            name="sub_title"
+                            defaultValue={selectedNewsletter.intro || ''}
+                            placeholder="Short intro line for this newsletter"
+                            className="w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) px-3 py-2 type-body text-(--color-text-primary) focus:outline-none"
+                          />
+                        </div>
 
+                        <div className="md:col-span-1 md:flex md:items-end">
+                          <button
+                            type="submit"
+                            className="w-full rounded-md bg-accent-primary px-3 py-2 type-caption text-white hover:bg-accent-hover"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </details>
 
-
-                  <div className="md:col-span-1 md:flex md:items-end">
-                    <button
-                      type="submit"
-                      className="w-full rounded-md bg-accent-primary px-3 py-2 type-caption text-white hover:bg-accent-hover"
-                    >
-                      Save
-                    </button>
-                  </div>
-                </form>
+                  <CoverImageGenerator
+                    newsletterId={selectedNewsletter.id}
+                    coverImageUrl={selectedNewsletter.cover_image}
+                    generatedImages={newsletterImages || []}
+                  />
+                </>
               ) : (
                 <div className="rounded-lg border border-dashed border-(--color-card-border) bg-(--color-card-bg) p-3">
                   <p className="type-caption text-(--color-text-secondary)">
