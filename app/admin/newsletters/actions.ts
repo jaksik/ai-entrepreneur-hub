@@ -50,8 +50,6 @@ export async function updateNewsletterDetails(formData: FormData) {
 
   const titleInput = formData.get('title')
   const subtitleInput = formData.get('sub_title')
-  const statusInput = formData.get('status')
-
   const title = typeof titleInput === 'string' ? titleInput.trim() : ''
   const intro = typeof subtitleInput === 'string' ? subtitleInput.trim() : ''
 
@@ -72,6 +70,9 @@ export async function updateNewsletterDetails(formData: FormData) {
   }
 
   revalidatePath('/admin/newsletters')
+  revalidatePath(`/admin/newsletters/${newsletterId}/curate`)
+  revalidatePath(`/admin/newsletters/${newsletterId}/design`)
+  revalidatePath(`/admin/newsletters/${newsletterId}/generate`)
 }
 
 export async function updateArticleContent(
@@ -81,7 +82,17 @@ export async function updateArticleContent(
   const supabase = await createClient()
   const db = supabase as any
 
-  const payload: any = {}
+  const { data: assignment, error: assignmentError } = await db
+    .from('newsletter_articles')
+    .select('newsletter_id')
+    .eq('id', newsletterArticleId)
+    .maybeSingle()
+
+  if (assignmentError) {
+    throw new Error('Failed to load newsletter article')
+  }
+
+  const payload: Record<string, string | null> = {}
   
   if (updatedFields.title !== undefined) payload.title = updatedFields.title
   if (updatedFields.description !== undefined) payload.description = updatedFields.description
@@ -99,6 +110,13 @@ export async function updateArticleContent(
   }
 
   revalidatePath('/admin/newsletters')
+
+  const newsletterId = assignment?.newsletter_id
+  if (typeof newsletterId === 'number' && newsletterId > 0) {
+    revalidatePath(`/admin/newsletters/${newsletterId}/curate`)
+    revalidatePath(`/admin/newsletters/${newsletterId}/design`)
+    revalidatePath(`/admin/newsletters/${newsletterId}/generate`)
+  }
 }
 
 export async function generateAiSnippet(
@@ -108,6 +126,16 @@ export async function generateAiSnippet(
 ) {
   const supabase = await createClient()
   const db = supabase as any
+
+  const { data: assignment, error: assignmentError } = await db
+    .from('newsletter_articles')
+    .select('newsletter_id')
+    .eq('id', newsletterArticleId)
+    .maybeSingle()
+
+  if (assignmentError) {
+    throw new Error('Failed to load newsletter article')
+  }
 
   const cleanTitle = originalTitle?.trim() || 'Breaking AI Update'
   const cleanDescription = originalDescription?.trim() || 'Fresh AI signals are shaping what founders should do next.'
@@ -128,6 +156,13 @@ export async function generateAiSnippet(
   }
 
   revalidatePath('/admin/newsletters')
+
+  const newsletterId = assignment?.newsletter_id
+  if (typeof newsletterId === 'number' && newsletterId > 0) {
+    revalidatePath(`/admin/newsletters/${newsletterId}/curate`)
+    revalidatePath(`/admin/newsletters/${newsletterId}/design`)
+    revalidatePath(`/admin/newsletters/${newsletterId}/generate`)
+  }
 }
 
 export async function getNewsletterBeehiivData(newsletterId: number) {
