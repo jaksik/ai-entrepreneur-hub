@@ -214,6 +214,9 @@ async function generateNewsletterCoverImage(formData: FormData) {
   }
 
   revalidatePath('/admin/newsletters')
+  revalidatePath(`/admin/newsletters/${newsletterId}/design`)
+  revalidatePath(`/admin/newsletters/${newsletterId}/curate`)
+  revalidatePath(`/admin/newsletters/${newsletterId}/generate`)
 }
 
 async function setNewsletterCoverImage(formData: FormData) {
@@ -257,6 +260,9 @@ async function setNewsletterCoverImage(formData: FormData) {
   }
 
   revalidatePath('/admin/newsletters')
+  revalidatePath(`/admin/newsletters/${newsletterId}/design`)
+  revalidatePath(`/admin/newsletters/${newsletterId}/curate`)
+  revalidatePath(`/admin/newsletters/${newsletterId}/generate`)
 }
 
 export default function CoverImageGenerator({

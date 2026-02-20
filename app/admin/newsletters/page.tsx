@@ -1,21 +1,11 @@
+import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
-import {
-  updateNewsletterDetails,
-} from './actions'
-import NewsletterSelector from './NewsletterSelector'
-import CategorySelect from './CategorySelect'
-import BeehiivCopyModal from './BeehiivCopyModal'
-import CoverImageGenerator from './CoverImageGenerator'
-
-type PageProps = {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-}
 
 function formatPublishedAt(value: string | null) {
-  if (!value) return 'No date'
+  if (!value) return 'Not set'
 
   const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return 'No date'
+  if (Number.isNaN(parsed.getTime())) return 'Not set'
 
   return parsed.toLocaleDateString('en-US', {
     month: 'short',
@@ -24,372 +14,72 @@ function formatPublishedAt(value: string | null) {
   })
 }
 
-function trimDescription(value: string | null | undefined) {
-  if (!value) return null
-
-  const maxLength = 140
-  const normalized = value.replace(/\s+/g, ' ').trim()
-
-  if (!normalized) return null
-
-  return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 3).trimEnd()}...` : normalized
-}
-
-function normalizeCategory(value: string | null | undefined) {
-  const normalized = value?.trim().toLowerCase()
-  if (!normalized) return 'uncategorized'
-  return normalized
-}
-
-function formatCategoryLabel(value: string) {
-  return value === 'uncategorized' ? 'Uncategorized' : value.charAt(0).toUpperCase() + value.slice(1)
-}
-
-function getStatusTone(status: string) {
-  if (status === 'sent') {
-    return {
-      container: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
-      dot: 'bg-emerald-500',
-    }
-  }
-
-  if (status === 'scheduled') {
-    return {
-      container: 'border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-300',
-      dot: 'bg-amber-500',
-    }
-  }
-
-  if (status === 'archived') {
-    return {
-      container: 'border-violet-500/40 bg-violet-500/10 text-violet-600 dark:text-violet-300',
-      dot: 'bg-violet-500',
-    }
-  }
-
-  return {
-    container: 'border-(--color-card-border) bg-(--color-bg-secondary) text-(--color-text-secondary)',
-    dot: 'bg-(--color-text-tertiary)',
-  }
-}
-
-function getCategoryTone(category: string) {
-  if (category === 'feature') {
-    return {
-      dot: 'bg-blue-500',
-      text: 'text-blue-600 dark:text-blue-300',
-      border: 'border-l-blue-500',
-      chip: 'border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-300',
-    }
-  }
-
-  if (category === 'brief') {
-    return {
-      dot: 'bg-emerald-500',
-      text: 'text-emerald-600 dark:text-emerald-300',
-      border: 'border-l-emerald-500',
-      chip: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
-    }
-  }
-
-  if (category === 'economy') {
-    return {
-      dot: 'bg-amber-500',
-      text: 'text-amber-600 dark:text-amber-300',
-      border: 'border-l-amber-500',
-      chip: 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-300',
-    }
-  }
-
-  if (category === 'research') {
-    return {
-      dot: 'bg-violet-500',
-      text: 'text-violet-600 dark:text-violet-300',
-      border: 'border-l-violet-500',
-      chip: 'border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-300',
-    }
-  }
-
-  return {
-    dot: 'bg-slate-500',
-    text: 'text-slate-600 dark:text-slate-300',
-    border: 'border-l-slate-400',
-    chip: 'border-(--color-card-border) bg-(--color-bg-secondary) text-(--color-text-secondary)',
-  }
-}
-
-export default async function NewslettersPage({ searchParams }: PageProps) {
-  const params = await searchParams
-  const rawNewsletterId = Array.isArray(params.newsletterId)
-    ? params.newsletterId[0]
-    : params.newsletterId
-  const activeNewsletterId = rawNewsletterId ? Number(rawNewsletterId) : null
-
+export default async function NewslettersPage() {
   const supabase = await createClient()
   const db = supabase as any
 
-  const { data: newsletters, error: newslettersError } = await db
+  const { data: newsletters, error } = await db
     .from('newsletters')
-    .select('id, title, publish_date, intro, status, cover_image')
+    .select('id, title, publish_date, status')
     .order('publish_date', { ascending: false, nullsFirst: false })
 
-  if (newslettersError) {
+  if (error) {
     throw new Error('Failed to fetch newsletters')
   }
 
-  const safeActiveId =
-    activeNewsletterId && !Number.isNaN(activeNewsletterId) ? activeNewsletterId : null
-
-  const selectedNewsletter = safeActiveId
-    ? (newsletters || []).find(
-      (newsletter: {
-        id: number
-        title: string | null
-        publish_date: string | null
-        intro: string | null
-        status: string | null
-        cover_image: string | null
-      }) => newsletter.id === safeActiveId
-    )
-    : null
-
-  const { data: newsletterImages, error: newsletterImagesError } = safeActiveId
-    ? await db
-      .from('newsletter_images')
-      .select('id, newsletter_id, blob_url, prompt, provider, model, created_at')
-      .eq('newsletter_id', safeActiveId)
-      .order('created_at', { ascending: false })
-    : { data: null, error: null }
-
-  if (newsletterImagesError) {
-    throw new Error('Failed to fetch newsletter images')
-  }
-
-  const { data: curatedArticles, error: articlesError } = safeActiveId
-    ? await db
-      .from('newsletter_articles')
-      .select('id, newsletter_id, article_id, title, description, url, ai_title, ai_description, published_at, newsletter_category, publisher')
-      .eq('newsletter_id', safeActiveId)
-      .order('id', { ascending: false })
-    : { data: null, error: null }
-
-  if (articlesError) {
-    throw new Error('Failed to fetch newsletter articles')
-  }
-
-  const categoryCounts = (curatedArticles || []).reduce((acc: Record<string, number>, article: {
-    newsletter_category: string | null
-  }) => {
-    const key = normalizeCategory(article.newsletter_category)
-    acc[key] = (acc[key] || 0) + 1
-    return acc
-  }, {})
-
-  const orderedCategories = ['feature', 'brief', 'economy', 'research', 'uncategorized']
-  const categorySummary = orderedCategories
-    .map((key) => ({
-      key,
-      label: formatCategoryLabel(key),
-      count: categoryCounts[key] || 0,
-    }))
-
-  const selectedStatus = selectedNewsletter?.status?.trim().toLowerCase() || 'draft'
-  const statusTone = getStatusTone(selectedStatus)
-
   return (
-    <section className="min-h-[calc(100vh-8rem)] w-full bg-(--color-bg-primary)">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="type-title text-(--color-text-primary)">Newsletter Design</h2>
-        <div className="flex justify-start lg:justify-end">
-          <NewsletterSelector newsletters={newsletters || []} activeNewsletterId={safeActiveId} />
-          <BeehiivCopyModal selectedNewsletterId={safeActiveId} />
-        </div>
-
+    <section className="w-full bg-(--color-bg-primary)">
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="type-title text-(--color-text-primary)">Newsletters</h2>
+        <Link
+          href="/admin/newsletters/new"
+          className="type-body rounded-md border border-(--color-card-border) bg-(--color-card-bg) px-4 py-2 text-(--color-text-primary) hover:bg-(--color-bg-secondary)"
+        >
+          Create Newsletter
+        </Link>
       </div>
-      <div className="w-full pb-8">
-        <div className="rounded-xl border border-(--color-card-border) bg-(--color-card-bg)">
-          <div className="border-b border-(--color-card-border) bg-(--color-bg-secondary) p-4 md:p-5">
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
 
-              <div>
-                <p className="type-caption text-(--color-text-secondary)">
-
-
-                </p>
-                <div className="flex flex-wrap items-center gap-2 justify-start">
-                  {selectedNewsletter?.title
-                    ? <div className="inline-flex items-center gap-2 rounded-full border border-(--color-card-border) bg-(--color-card-bg) px-4 py-1.5">
-                      <span className="type-caption text-(--color-text-secondary)">Scheduled Date:</span>
-                      <span className="type-caption font-medium text-(--color-text-primary)">
-                        {selectedNewsletter?.publish_date ? formatPublishedAt(selectedNewsletter.publish_date) : 'Not set'}
-                      </span>
-                    </div>
-                    : 'Select or create a newsletter to get started...'}
-                  {safeActiveId ? (
-                    <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 ${statusTone.container}`}>
-                      <span className={`h-2 w-2 rounded-full ${statusTone.dot}`} aria-hidden />
-                      <span className="type-caption">Status</span>
-                      <span className="type-caption font-medium capitalize">{selectedStatus}</span>
-                    </div>
-                  ) : null}
-                </div>
-                <h2 className="type-subtitle text-(--color-text-primary) pt-5 pb-3 text-3xl">
-                  {selectedNewsletter?.title
-                    ? selectedNewsletter.title
-                    : ''}
-                </h2>
-                <h3 className="text-(--color-text-secondary) pb-5 text-xl">
-                  {selectedNewsletter?.intro
-                    ? selectedNewsletter?.intro
-                    : ''}
-                </h3>
-
-              </div>
-              <div className="space-y-3 lg:self-end">
-                <div className="flex flex-wrap items-center gap-2 justify-start lg:justify-end">
-                  {categorySummary.map((item) => {
-                    const tone = getCategoryTone(item.key)
-
-                    return (
-                      <span
-                        key={item.key}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 type-caption ${item.count > 0 ? tone.chip : 'border-(--color-card-border) bg-(--color-card-bg) text-(--color-text-secondary)'
-                          }`}
-                      >
-                        <span className='text-lg'>{item.label}: </span>
-                        <span className="text-lg">{item.count}</span>
-                      </span>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              {selectedNewsletter ? (
-                <>
-                  <details className="rounded-lg border border-(--color-card-border) bg-(--color-card-bg)">
-                    <summary className="cursor-pointer select-none px-3 py-2 type-caption text-(--color-text-primary)">
-                      Newsletter Details
-                    </summary>
-                    <div className="border-t border-(--color-card-border) p-3">
-                      <form
-                        action={updateNewsletterDetails}
-                        className="grid grid-cols-1 gap-3 md:grid-cols-12"
-                      >
-                        <input type="hidden" name="newsletter_id" value={String(selectedNewsletter.id)} />
-
-                        <div className="md:col-span-12">
-                          <label className="mb-1 block type-caption text-(--color-text-secondary)">Title</label>
-                          <input
-                            type="text"
-                            name="title"
-                            required
-                            defaultValue={selectedNewsletter.title || ''}
-                            className="w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) px-3 py-2 type-body text-(--color-text-primary) focus:outline-none"
-                          />
-                        </div>
-
-                        <div className="md:col-span-12">
-                          <label className="mb-1 block type-caption text-(--color-text-secondary)">Sub-title</label>
-                          <input
-                            type="text"
-                            name="sub_title"
-                            defaultValue={selectedNewsletter.intro || ''}
-                            placeholder="Short intro line for this newsletter"
-                            className="w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) px-3 py-2 type-body text-(--color-text-primary) focus:outline-none"
-                          />
-                        </div>
-
-                        <div className="md:col-span-1 md:flex md:items-end">
-                          <button
-                            type="submit"
-                            className="w-full rounded-md bg-accent-primary px-3 py-2 type-caption text-white hover:bg-accent-hover"
-                          >
-                            Save
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  </details>
-
-                  <CoverImageGenerator
-                    newsletterId={selectedNewsletter.id}
-                    coverImageUrl={selectedNewsletter.cover_image}
-                    generatedImages={newsletterImages || []}
-                  />
-                </>
-              ) : (
-                <div className="rounded-lg border border-dashed border-(--color-card-border) bg-(--color-card-bg) p-3">
-                  <p className="type-caption text-(--color-text-secondary)">
-                    Pick a newsletter to edit title, sub-title, and status.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-2 p-3 md:p-4">
-            {curatedArticles?.length ? (
-              curatedArticles.map((article: {
-                id: number
-                title: string | null
-                description: string | null
-                url: string | null
-                ai_title: string | null
-                ai_description: string | null
-                published_at: string | null
-                newsletter_category: string | null
-                publisher: string | null
-              }) => {
-                const displayDate = formatPublishedAt(article.published_at)
-                const displayTitle = article.ai_title || article.title || 'Untitled article'
-                const displayDescription = article.ai_description || article.description || ''
-                const clippedDescription = trimDescription(displayDescription)
-                const categoryKey = normalizeCategory(article.newsletter_category)
-                const categoryTone = getCategoryTone(categoryKey)
-
-                return (
-                  <article
-                    key={article.id}
-                    className={`grid grid-cols-1 gap-3 rounded-lg border border-(--color-card-border) border-l-4 bg-(--color-card-bg) p-3 transition hover:border-accent-primary hover:bg-(--color-bg-secondary) md:grid-cols-[11rem_10rem_1fr] md:items-start ${categoryTone.border}`}
-                  >
-                    <div className="pt-0.5">
-                      <p className="type-caption font-medium text-(--color-text-primary)">{displayDate}</p>
-                      <p className="type-caption text-(--color-text-secondary)">{article.publisher || 'Unknown'}</p>
-                    </div>
-
-                    <div className="space-y-1">
-                      <CategorySelect articleId={article.id} currentCategory={article.newsletter_category} />
-                    </div>
-
-                    <div className="min-w-0">
-                      {article.url ? (
-                        <a
-                          href={article.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="block type-body font-medium text-(--color-text-primary) hover:text-accent-primary hover:underline"
-                        >
-                          {displayTitle}
-                        </a>
-                      ) : (
-                        <p className="type-body font-medium text-(--color-text-primary)">{displayTitle}</p>
-                      )}
-                      {clippedDescription ? (
-                        <p className="mt-0.5 type-caption text-(--color-text-secondary)">{clippedDescription}</p>
-                      ) : null}
-                    </div>
-                  </article>
-                )
-              })
+      <div className="overflow-hidden rounded-xl border border-(--color-card-border) bg-(--color-card-bg)">
+        <table className="w-full border-collapse">
+          <thead className="bg-(--color-bg-secondary)">
+            <tr>
+              <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Title</th>
+              <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Publish Date</th>
+              <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {newsletters?.length ? (
+              newsletters.map((newsletter: { id: number; title: string | null; publish_date: string | null; status: string | null }) => (
+                <tr
+                  key={newsletter.id}
+                  className="border-t border-(--color-card-border) transition hover:bg-(--color-bg-secondary)"
+                >
+                  <td className="px-4 py-3 type-body text-(--color-text-primary)">
+                    <Link
+                      href={`/admin/newsletters/${newsletter.id}/curate`}
+                      className="hover:text-accent-primary hover:underline"
+                    >
+                      {newsletter.title || `Newsletter #${newsletter.id}`}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 type-caption text-(--color-text-secondary)">
+                    {formatPublishedAt(newsletter.publish_date)}
+                  </td>
+                  <td className="px-4 py-3 type-caption text-(--color-text-secondary)">
+                    <span className="capitalize">{newsletter.status || 'draft'}</span>
+                  </td>
+                </tr>
+              ))
             ) : (
-              <p className="type-body text-(--color-text-secondary)">
-                No curated articles found for this newsletter.
-              </p>
+              <tr>
+                <td colSpan={3} className="px-4 py-8 text-center type-body text-(--color-text-secondary)">
+                  No newsletters yet. Create one to get started.
+                </td>
+              </tr>
             )}
-          </div>
-        </div>
+          </tbody>
+        </table>
       </div>
     </section>
   )
