@@ -129,3 +129,37 @@ export async function generateAiSnippet(
 
   revalidatePath('/admin/newsletters')
 }
+
+export async function getNewsletterBeehiivData(newsletterId: number) {
+  const supabase = await createClient()
+  const db = supabase as any
+
+  if (!newsletterId || Number.isNaN(newsletterId)) {
+    throw new Error('Valid newsletter id is required')
+  }
+
+  const { data: newsletter, error: newsletterError } = await db
+    .from('newsletters')
+    .select('id, title')
+    .eq('id', newsletterId)
+    .single()
+
+  if (newsletterError) {
+    throw new Error('Failed to fetch newsletter')
+  }
+
+  const { data: articles, error: articlesError } = await db
+    .from('newsletter_articles')
+    .select('id, title, ai_title, url, newsletter_category')
+    .eq('newsletter_id', newsletterId)
+    .order('id', { ascending: true })
+
+  if (articlesError) {
+    throw new Error('Failed to fetch newsletter articles')
+  }
+
+  return {
+    newsletter,
+    articles: articles || [],
+  }
+}

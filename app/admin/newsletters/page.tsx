@@ -4,6 +4,7 @@ import {
 } from './actions'
 import NewsletterSelector from './NewsletterSelector'
 import CategorySelect from './CategorySelect'
+import BeehiivCopyModal from './BeehiivCopyModal'
 
 type PageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
@@ -187,12 +188,7 @@ export default async function NewslettersPage({ searchParams }: PageProps) {
         <h2 className="type-title text-(--color-text-primary)">Newsletter Design</h2>
         <div className="flex justify-start lg:justify-end">
           <NewsletterSelector newsletters={newsletters || []} activeNewsletterId={safeActiveId} />
-          <button
-            type="button"
-            className="inline-flex items-center justify-center rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-6 py-3 type-body font-semibold text-emerald-600 ring-1 ring-emerald-500/20 transition hover:bg-emerald-500/20 dark:text-emerald-300"
-          >
-            Get Money $
-          </button>
+          <BeehiivCopyModal selectedNewsletterId={safeActiveId} />
         </div>
 
       </div>
