@@ -51,7 +51,7 @@ export async function updateNewsletterDetails(formData: FormData) {
   const titleInput = formData.get('title')
   const subtitleInput = formData.get('sub_title')
   const title = typeof titleInput === 'string' ? titleInput.trim() : ''
-  const intro = typeof subtitleInput === 'string' ? subtitleInput.trim() : ''
+  const subTitle = typeof subtitleInput === 'string' ? subtitleInput.trim() : ''
 
   if (!title) {
     throw new Error('Newsletter title is required')
@@ -61,7 +61,7 @@ export async function updateNewsletterDetails(formData: FormData) {
     .from('newsletters')
     .update({
       title,
-      intro: intro || null,
+      sub_title: subTitle || null,
     })
     .eq('id', newsletterId)
 
@@ -195,6 +195,47 @@ export async function generateAiSnippet(
   }
 }
 
+export async function setNewsletterCoverArticle(newsletterId: number, newsletterArticleId: number) {
+  const supabase = await createClient()
+  const db = supabase
+
+  if (!Number.isInteger(newsletterId) || newsletterId <= 0) {
+    throw new Error('Valid newsletter id is required')
+  }
+
+  if (!Number.isInteger(newsletterArticleId) || newsletterArticleId <= 0) {
+    throw new Error('Valid newsletter article id is required')
+  }
+
+  const { data: newsletterArticle, error: newsletterArticleError } = await db
+    .from('newsletter_articles')
+    .select('id, newsletter_id')
+    .eq('id', newsletterArticleId)
+    .maybeSingle()
+
+  if (newsletterArticleError) {
+    throw new Error('Failed to load newsletter article')
+  }
+
+  if (!newsletterArticle || newsletterArticle.newsletter_id !== newsletterId) {
+    throw new Error('Newsletter article does not belong to this newsletter')
+  }
+
+  const { error } = await db
+    .from('newsletters')
+    .update({ cover_article: newsletterArticleId })
+    .eq('id', newsletterId)
+
+  if (error) {
+    throw new Error('Failed to update newsletter cover article')
+  }
+
+  revalidatePath('/admin/newsletters')
+  revalidatePath(`/admin/newsletters/${newsletterId}/curate`)
+  revalidatePath(`/admin/newsletters/${newsletterId}/design`)
+  revalidatePath(`/admin/newsletters/${newsletterId}/generate`)
+}
+
 export async function getNewsletterBeehiivData(newsletterId: number) {
   const supabase = await createClient()
   const db = supabase
@@ -205,7 +246,7 @@ export async function getNewsletterBeehiivData(newsletterId: number) {
 
   const { data: newsletter, error: newsletterError } = await db
     .from('newsletters')
-    .select('id, title')
+    .select('id, title, sub_title, cover_image')
     .eq('id', newsletterId)
     .single()
 

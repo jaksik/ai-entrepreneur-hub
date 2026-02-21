@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation'
-import NewsletterTabs from './NewsletterTabs'
 
 type LayoutProps = {
   children: React.ReactNode
@@ -14,10 +13,5 @@ export default async function NewsletterDetailLayout({ children, params }: Layou
     notFound()
   }
 
-  return (
-    <div className="space-y-6">
-      <NewsletterTabs newsletterId={newsletterId} />
-      {children}
-    </div>
-  )
+  return children
 }

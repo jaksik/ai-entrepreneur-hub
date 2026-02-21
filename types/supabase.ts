@@ -125,24 +125,27 @@ export type Database = {
           title: string | null
           publish_date: string | null
           status: string | null
-          intro: string | null
+          sub_title: string | null
           cover_image: string | null
+          cover_article: number | null
         }
         Insert: {
           id?: never
           title?: string | null
           publish_date?: string | null
           status?: string | null
-          intro?: string | null
+          sub_title?: string | null
           cover_image?: string | null
+          cover_article?: number | null
         }
         Update: {
           id?: never
           title?: string | null
           publish_date?: string | null
           status?: string | null
-          intro?: string | null
+          sub_title?: string | null
           cover_image?: string | null
+          cover_article?: number | null
         }
         Relationships: []
       }

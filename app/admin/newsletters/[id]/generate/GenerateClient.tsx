@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
 import { getNewsletterBeehiivData } from '../../actions'
 
@@ -15,6 +16,8 @@ type BeehiivPayload = {
   newsletter: {
     id: number
     title: string | null
+    sub_title: string | null
+    cover_image: string | null
   }
   articles: BeehiivArticle[]
 }
@@ -56,7 +59,31 @@ function toSafeUrl(value: string | null | undefined) {
   return '#'
 }
 
-function buildBeehiivHtml(grouped: Record<string, BeehiivArticle[]>) {
+function toSafeImageUrl(value: string | null | undefined) {
+  if (!value) return null
+
+  try {
+    const parsed = new URL(value)
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return parsed.toString()
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
+
+function buildBeehiivHtml(
+  grouped: Record<string, BeehiivArticle[]>,
+  coverImageUrl: string | null,
+  newsletterTitle: string | null
+) {
+  const safeCoverImageUrl = toSafeImageUrl(coverImageUrl)
+  const coverImageMarkup = safeCoverImageUrl
+    ? `<p><img src="${escapeHtml(safeCoverImageUrl)}" alt="${escapeHtml(newsletterTitle?.trim() || 'Newsletter cover image')}" style="max-width:100%;height:auto;" /></p>`
+    : ''
+
   const sections = ORDERED_CATEGORIES
     .filter((key) => (grouped[key] || []).length > 0)
     .map((key) => {
@@ -73,11 +100,12 @@ function buildBeehiivHtml(grouped: Record<string, BeehiivArticle[]>) {
     })
     .join('')
 
-  return `<div>${sections}</div>`
+  return `<div>${coverImageMarkup}${sections}</div>`
 }
 
-function buildPlainText(grouped: Record<string, BeehiivArticle[]>) {
-  return ORDERED_CATEGORIES
+function buildPlainText(grouped: Record<string, BeehiivArticle[]>, coverImageUrl: string | null) {
+  const safeCoverImageUrl = toSafeImageUrl(coverImageUrl)
+  const articleSections = ORDERED_CATEGORIES
     .filter((key) => (grouped[key] || []).length > 0)
     .map((key) => {
       const categoryLabel = formatCategoryLabel(key)
@@ -90,6 +118,16 @@ function buildPlainText(grouped: Record<string, BeehiivArticle[]>) {
       return `${categoryLabel}\n${lines.join('\n')}`
     })
     .join('\n\n')
+
+  if (safeCoverImageUrl && articleSections) {
+    return `Cover Image: ${safeCoverImageUrl}\n\n${articleSections}`
+  }
+
+  if (safeCoverImageUrl) {
+    return `Cover Image: ${safeCoverImageUrl}`
+  }
+
+  return articleSections
 }
 
 export default function GenerateClient({ newsletterId }: { newsletterId: number }) {
@@ -111,6 +149,11 @@ export default function GenerateClient({ newsletterId }: { newsletterId: number 
       return acc
     }, {})
   }, [payload])
+
+  const safeCoverImageUrl = useMemo(
+    () => toSafeImageUrl(payload?.newsletter?.cover_image),
+    [payload?.newsletter?.cover_image]
+  )
 
   useEffect(() => {
     let isMounted = true
@@ -151,8 +194,12 @@ export default function GenerateClient({ newsletterId }: { newsletterId: number 
     setCopyState(null)
 
     try {
-      const html = buildBeehiivHtml(groupedArticles)
-      const plainText = buildPlainText(groupedArticles)
+      const html = buildBeehiivHtml(
+        groupedArticles,
+        payload.newsletter.cover_image,
+        payload.newsletter.title
+      )
+      const plainText = buildPlainText(groupedArticles, payload.newsletter.cover_image)
 
       if (typeof window !== 'undefined' && navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
         const clipboardItem = new ClipboardItem({
@@ -176,12 +223,14 @@ export default function GenerateClient({ newsletterId }: { newsletterId: number 
   }
 
   return (
-    <section className="w-full rounded-xl border border-(--color-card-border) bg-(--color-card-bg) p-5">
-      <div className="mb-4 flex items-start justify-between gap-3">
+    <section className="mx-auto w-full max-w-3xl rounded-xl border border-(--color-card-border) bg-(--color-card-bg) p-5">
+      <div className="mb-4 flex items-start justify-between gap-3 border-b border-(--color-card-border) pb-4">
         <div>
-          {/* <h2 className="type-subtitle text-(--color-text-primary)">Beehiiv Newsletter Copy</h2> */}
-          <p className="type-caption text-(--color-text-secondary)">
+          <h2 className="type-subtitle text-(--color-text-primary)">
             {payload?.newsletter?.title || 'Newsletter Preview'}
+          </h2>
+          <p className="mt-1 type-caption text-(--color-text-secondary)">
+            {payload?.newsletter?.sub_title || ''}
           </p>
         </div>
       </div>
@@ -191,41 +240,58 @@ export default function GenerateClient({ newsletterId }: { newsletterId: number 
           <p className="type-body text-(--color-text-secondary)">Loading newsletter preview...</p>
         ) : error ? (
           <p className="type-body text-red-500">{error}</p>
-        ) : payload?.articles?.length ? (
+        ) : payload ? (
           <div className="space-y-5">
-            {ORDERED_CATEGORIES.map((categoryKey) => {
-              const articles = groupedArticles[categoryKey] || []
-              if (!articles.length) return null
+            {safeCoverImageUrl ? (
+              <section>
+                <Image
+                  src={safeCoverImageUrl}
+                  alt={payload.newsletter.title?.trim() || 'Newsletter cover image'}
+                  width={1600}
+                  height={900}
+                  sizes="(max-width: 1024px) 100vw, 900px"
+                  className="h-auto w-full rounded-lg border border-(--color-card-border) object-cover"
+                />
+              </section>
+            ) : null}
 
-              return (
-                <section key={categoryKey}>
-                  <h2 className="mb-2 type-subtitle text-(--color-text-primary)">
-                    {formatCategoryLabel(categoryKey)}
-                  </h2>
-                  <div className="space-y-2">
-                    {articles.map((article) => {
-                      const title = article.ai_title?.trim() || article.title?.trim() || 'Untitled article'
-                      const url = toSafeUrl(article.url)
+            {payload.articles?.length ? (
+              ORDERED_CATEGORIES.map((categoryKey) => {
+                const articles = groupedArticles[categoryKey] || []
+                if (!articles.length) return null
 
-                      return (
-                        <a
-                          key={article.id}
-                          href={url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="block type-body text-(--color-text-primary) underline decoration-(--color-card-border) underline-offset-2 hover:text-accent-primary"
-                        >
-                          {title}
-                        </a>
-                      )
-                    })}
-                  </div>
-                </section>
-              )
-            })}
+                return (
+                  <section key={categoryKey}>
+                    <h2 className="mb-2 type-subtitle text-(--color-text-primary)">
+                      {formatCategoryLabel(categoryKey)}
+                    </h2>
+                    <div className="space-y-2">
+                      {articles.map((article) => {
+                        const title = article.ai_title?.trim() || article.title?.trim() || 'Untitled article'
+                        const url = toSafeUrl(article.url)
+
+                        return (
+                          <a
+                            key={article.id}
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="block type-body text-(--color-text-primary) underline decoration-(--color-card-border) underline-offset-2 hover:text-accent-primary"
+                          >
+                            {title}
+                          </a>
+                        )
+                      })}
+                    </div>
+                  </section>
+                )
+              })
+            ) : (
+              <p className="type-body text-(--color-text-secondary)">No articles found for this newsletter.</p>
+            )}
           </div>
         ) : (
-          <p className="type-body text-(--color-text-secondary)">No articles found for this newsletter.</p>
+          <p className="type-body text-(--color-text-secondary)">No newsletter data found.</p>
         )}
       </div>
 
@@ -234,8 +300,8 @@ export default function GenerateClient({ newsletterId }: { newsletterId: number 
         <button
           type="button"
           onClick={handleCopy}
-          disabled={isLoading || !payload?.articles?.length || isCopying}
-          className="rounded-md bg-accent-primary px-4 py-2 type-caption font-medium text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={isLoading || (!payload?.articles?.length && !safeCoverImageUrl) || isCopying}
+          className="rounded-md border border-(--color-card-border) bg-(--color-text-primary) px-4 py-2 type-caption font-medium text-(--color-bg-primary) transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isCopying ? 'Copying...' : 'Copy for beehiiv'}
         </button>
