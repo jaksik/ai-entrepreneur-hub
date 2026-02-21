@@ -141,7 +141,7 @@ export default async function NewsletterArticlesPage({ params, searchParams }: P
             <tr>
               <th className="px-4 py-2.5 text-left type-caption text-(--color-text-secondary) uppercase tracking-wide">
                 <Link href={getSortLink('created_at')} className="inline-flex items-center hover:text-(--color-text-primary)">
-                  created_at{getSortIndicator('created_at')}
+                  created at{getSortIndicator('created_at')}
                 </Link>
               </th>
               <th className="px-4 py-2.5 text-left type-caption text-(--color-text-secondary) uppercase tracking-wide">
