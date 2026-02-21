@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation'
 import DeleteButton from './DeleteButton'
 import { updateArticle } from './actions'
 
+type PageProps = {
+  params: Promise<{ id: string; articleId: string }>
+}
+
 function toDateTimeLocal(value: string | null) {
   if (!value) return ''
   const date = new Date(value)
@@ -14,25 +18,40 @@ function toDateTimeLocal(value: string | null) {
   return `${year}-${month}-${day}T${hours}:${minutes}`
 }
 
-export default async function EditArticlePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function NewsletterEditArticlePage({ params }: PageProps) {
   const supabase = await createClient()
-  const { id } = await params
+  const { id, articleId } = await params
+  const newsletterId = Number(id)
+  const parsedArticleId = Number(articleId)
 
-  const { data: article } = await supabase.from('articles').select().eq('id', Number(id)).single()
+  if (!Number.isInteger(newsletterId) || newsletterId <= 0) {
+    throw new Error('Invalid newsletter id')
+  }
+
+  if (!Number.isInteger(parsedArticleId) || parsedArticleId <= 0) {
+    throw new Error('Invalid article id')
+  }
+
+  const { data: article } = await supabase
+    .from('articles')
+    .select()
+    .eq('id', parsedArticleId)
+    .single()
 
   if (!article) {
-    redirect('/admin/articles')
+    redirect(`/admin/newsletters/${newsletterId}/articles`)
   }
 
   return (
     <div className="max-w-2xl mx-auto py-12">
       <div className="flex justify-between items-center mb-8">
         <h1 className="type-title text-(--color-text-primary)">Edit Article</h1>
-        <DeleteButton id={article.id} />
+        <DeleteButton articleId={article.id} newsletterId={newsletterId} />
       </div>
 
       <form action={updateArticle} className="space-y-6">
-        <input type="hidden" name="id" value={article.id} />
+        <input type="hidden" name="article_id" value={article.id} />
+        <input type="hidden" name="newsletter_id" value={newsletterId} />
 
         <div>
           <label className="block type-caption">Title</label>

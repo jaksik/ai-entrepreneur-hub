@@ -1,32 +1,35 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { updateArticleContent } from './actions'
+import { updateArticleCategory } from './actions'
 import {
   CATEGORY_OPTIONS,
   getCategorySelectTone,
   normalizeCategoryValue,
-} from './categoryDropdown'
+} from '../../categoryDropdown'
 
-export default function CategorySelect({
+export default function ArticleCategorySelect({
   articleId,
+  newsletterId,
   currentCategory,
 }: {
   articleId: number
+  newsletterId: number
   currentCategory: string | null
 }) {
   const [isPending, startTransition] = useTransition()
-  const [optimisticCategory, setOptimisticCategory] = useState<string | null>(currentCategory)
+  const [optimisticCategory, setOptimisticCategory] = useState<string | null>(() => {
+    const normalized = normalizeCategoryValue(currentCategory)
+    return normalized || null
+  })
   const categoryToneClass = getCategorySelectTone(normalizeCategoryValue(optimisticCategory))
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newCategory = e.target.value === '' ? null : e.target.value
+  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCategory = event.target.value === '' ? null : event.target.value
     setOptimisticCategory(newCategory)
-    
+
     startTransition(async () => {
-      await updateArticleContent(articleId, {
-        newsletter_category: newCategory,
-      })
+      await updateArticleCategory(articleId, newsletterId, newCategory)
     })
   }
 

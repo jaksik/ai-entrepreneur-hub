@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import { addArticleToNewsletter, removeArticleFromNewsletter } from './actions'
 import CategorySelect from '../../CategorySelect'
+import CategoryCountRow from '../../CategoryCountRow'
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -45,42 +46,33 @@ function normalizeCategory(value: string | null | undefined) {
   return normalized
 }
 
-function formatCategoryLabel(value: string) {
-  return value === 'uncategorized' ? 'Uncategorized' : value.charAt(0).toUpperCase() + value.slice(1)
-}
-
 function getCategoryTone(category: string) {
   if (category === 'feature') {
     return {
       border: 'border-l-blue-500',
-      chip: 'border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-300',
     }
   }
 
   if (category === 'brief') {
     return {
       border: 'border-l-emerald-500',
-      chip: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
     }
   }
 
   if (category === 'economy') {
     return {
       border: 'border-l-amber-500',
-      chip: 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-300',
     }
   }
 
   if (category === 'research') {
     return {
       border: 'border-l-violet-500',
-      chip: 'border-violet-500/30 bg-violet-500/10 text-violet-600 dark:text-violet-300',
     }
   }
 
   return {
     border: 'border-l-slate-400',
-    chip: 'border-(--color-card-border) bg-(--color-bg-secondary) text-(--color-text-secondary)',
   }
 }
 
@@ -131,21 +123,6 @@ export default async function NewsletterCuratePage({ params, searchParams }: Pag
   if (curatedError) {
     throw new Error('Failed to fetch curated articles')
   }
-
-  const categoryCounts = (curatedArticles || []).reduce((acc: Record<string, number>, article: {
-    newsletter_category: string | null
-  }) => {
-    const key = normalizeCategory(article.newsletter_category)
-    acc[key] = (acc[key] || 0) + 1
-    return acc
-  }, {})
-
-  const orderedCategories = ['feature', 'brief', 'economy', 'research', 'uncategorized']
-  const categorySummary = orderedCategories.map((key) => ({
-    key,
-    label: formatCategoryLabel(key),
-    count: categoryCounts[key] || 0,
-  }))
 
   const curatedArticleIds: number[] =
     curatedArticles
@@ -379,25 +356,10 @@ export default async function NewsletterCuratePage({ params, searchParams }: Pag
                 </p>
 
                 <div className="ml-auto w-fit">
-                  <div className="flex flex-wrap items-center justify-end gap-2">
-                    {categorySummary.map((item) => {
-                      const tone = getCategoryTone(item.key)
-
-                      return (
-                        <span
-                          key={item.key}
-                          className={`inline-flex items-center justify-center gap-1.5 rounded-full border px-3 py-1 type-caption ${
-                            item.count > 0 ? tone.chip : 'border-(--color-card-border) bg-(--color-bg-secondary) text-(--color-text-secondary)'
-                          }`}
-                        >
-                          {item.key !== 'uncategorized' ? (
-                            <span className="text-md">{item.label}:</span>
-                          ) : null}
-                          <span className="text-md">{item.count}</span>
-                        </span>
-                      )
-                    })}
-                  </div>
+                  <CategoryCountRow
+                    categories={(curatedArticles || []).map((article: { newsletter_category: string | null }) => article.newsletter_category)}
+                    align="right"
+                  />
                 </div>
               </div>
             </div>

@@ -29,6 +29,7 @@ export async function addArticleToNewsletter(articleId: number, newsletterId: nu
 
   if (existingAssignment) {
     revalidatePath('/admin/newsletters')
+    revalidatePath(`/admin/newsletters/${newsletterId}/articles`)
     revalidatePath(`/admin/newsletters/${newsletterId}/curate`)
     revalidatePath(`/admin/newsletters/${newsletterId}/design`)
     revalidatePath(`/admin/newsletters/${newsletterId}/generate`)
@@ -58,6 +59,7 @@ export async function addArticleToNewsletter(articleId: number, newsletterId: nu
   if (insertError) {
     if (insertError.code === '23505') {
       revalidatePath('/admin/newsletters')
+      revalidatePath(`/admin/newsletters/${newsletterId}/articles`)
       revalidatePath(`/admin/newsletters/${newsletterId}/curate`)
       revalidatePath(`/admin/newsletters/${newsletterId}/design`)
       revalidatePath(`/admin/newsletters/${newsletterId}/generate`)
@@ -68,6 +70,7 @@ export async function addArticleToNewsletter(articleId: number, newsletterId: nu
   }
 
   revalidatePath('/admin/newsletters')
+  revalidatePath(`/admin/newsletters/${newsletterId}/articles`)
   revalidatePath(`/admin/newsletters/${newsletterId}/curate`)
   revalidatePath(`/admin/newsletters/${newsletterId}/design`)
   revalidatePath(`/admin/newsletters/${newsletterId}/generate`)
@@ -100,6 +103,7 @@ export async function removeArticleFromNewsletter(newsletterArticleId: number) {
 
   const newsletterId = assignment?.newsletter_id
   if (typeof newsletterId === 'number' && newsletterId > 0) {
+    revalidatePath(`/admin/newsletters/${newsletterId}/articles`)
     revalidatePath(`/admin/newsletters/${newsletterId}/curate`)
     revalidatePath(`/admin/newsletters/${newsletterId}/design`)
     revalidatePath(`/admin/newsletters/${newsletterId}/generate`)

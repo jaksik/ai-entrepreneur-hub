@@ -31,7 +31,7 @@ export default function CreateNewsletterPage() {
 
   useEffect(() => {
     if (state.success && state.newsletterId) {
-      router.push(`/admin/newsletters/${state.newsletterId}/curate`)
+      router.push(`/admin/newsletters/${state.newsletterId}/articles`)
     }
   }, [router, state.newsletterId, state.success])
 
@@ -39,7 +39,7 @@ export default function CreateNewsletterPage() {
     <section className="mx-auto w-full max-w-2xl bg-(--color-bg-primary)">
       <div className="mb-6">
         <h2 className="type-title text-(--color-text-primary)">Create Newsletter</h2>
-        <p className="type-caption text-(--color-text-secondary)">Set up a new newsletter and jump straight into curation.</p>
+        <p className="type-caption text-(--color-text-secondary)">Set up a new newsletter and jump straight into articles.</p>
       </div>
 
       <div className="rounded-xl border border-(--color-card-border) bg-(--color-card-bg) p-5">
@@ -101,7 +101,7 @@ export default function CreateNewsletterPage() {
           </div>
 
           {state.error ? <p className="type-caption text-red-500">{state.error}</p> : null}
-          {state.success ? <p className="type-caption text-(--color-text-secondary)">Redirecting to curate...</p> : null}
+          {state.success ? <p className="type-caption text-(--color-text-secondary)">Redirecting to articles...</p> : null}
 
           <div className="flex items-center justify-end gap-2 pt-2">
             <Link

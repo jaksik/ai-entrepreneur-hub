@@ -23,12 +23,12 @@ export default async function AdminPage() {
         </Link>
 
         <Link
-          href="/admin/articles"
+          href="/admin/newsletters"
           className="rounded-lg border border-(--color-card-border) bg-(--color-card-bg) p-6 transition hover:bg-(--color-bg-secondary)"
         >
           <p className="type-caption text-(--color-text-secondary)">Manage</p>
-          <h3 className="type-title mt-1 text-(--color-text-primary)">Articles</h3>
-          <p className="type-body mt-2 text-(--color-text-secondary)">{articlesCount ?? 0} total</p>
+          <h3 className="type-title mt-1 text-(--color-text-primary)">Newsletter Articles</h3>
+          <p className="type-body mt-2 text-(--color-text-secondary)">{articlesCount ?? 0} total in article database</p>
         </Link>
       </div>
     </div>
