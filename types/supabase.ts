@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           id: number
           title: string | null
+          title_snippets: string | null
           description: string | null
           source: string | null
           url: string | null
@@ -29,6 +30,7 @@ export type Database = {
         Insert: {
           id?: never
           title?: string | null
+          title_snippets?: string | null
           description?: string | null
           source?: string | null
           url?: string | null
@@ -40,6 +42,7 @@ export type Database = {
         Update: {
           id?: never
           title?: string | null
+          title_snippets?: string | null
           description?: string | null
           source?: string | null
           url?: string | null
