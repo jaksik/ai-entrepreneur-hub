@@ -5,6 +5,15 @@ import CategorySelect from '../../CategorySelect'
 
 type PageProps = {
   params: Promise<{ id: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}
+
+const ARTICLE_DB_CATEGORIES = ['all', 'feature', 'brief', 'economy', 'research', 'uncategorized'] as const
+const ARTICLE_DB_SORT_OPTIONS = ['newest', 'oldest', 'published_newest', 'published_oldest', 'title_az', 'title_za'] as const
+
+function getSingleSearchParam(value: string | string[] | undefined) {
+  if (Array.isArray(value)) return value[0]
+  return value
 }
 
 function formatPublishedAt(value: string | null) {
@@ -75,9 +84,22 @@ function getCategoryTone(category: string) {
   }
 }
 
-export default async function NewsletterCuratePage({ params }: PageProps) {
+export default async function NewsletterCuratePage({ params, searchParams }: PageProps) {
   const { id } = await params
+  const resolvedSearchParams = await searchParams
   const newsletterId = Number(id)
+
+  const rawSearch = getSingleSearchParam(resolvedSearchParams.search)
+  const rawCategory = getSingleSearchParam(resolvedSearchParams.category)
+  const rawSort = getSingleSearchParam(resolvedSearchParams.sort)
+
+  const searchTerm = rawSearch?.trim() || ''
+  const selectedCategory = ARTICLE_DB_CATEGORIES.includes((rawCategory || '') as typeof ARTICLE_DB_CATEGORIES[number])
+    ? (rawCategory as typeof ARTICLE_DB_CATEGORIES[number])
+    : 'all'
+  const selectedSort = ARTICLE_DB_SORT_OPTIONS.includes((rawSort || '') as typeof ARTICLE_DB_SORT_OPTIONS[number])
+    ? (rawSort as typeof ARTICLE_DB_SORT_OPTIONS[number])
+    : 'newest'
 
   if (!newsletterId || Number.isNaN(newsletterId)) {
     notFound()
@@ -152,11 +174,37 @@ export default async function NewsletterCuratePage({ params }: PageProps) {
 
   let inboxQuery = db
     .from('articles')
-    .select('id, title, description, url, publisher, published_at')
-    .order('id', { ascending: false })
+    .select('id, title, description, url, publisher, published_at, category')
 
   if (curatedArticleIds.length > 0) {
     inboxQuery = inboxQuery.not('id', 'in', `(${curatedArticleIds.join(',')})`)
+  }
+
+  if (selectedCategory === 'uncategorized') {
+    inboxQuery = inboxQuery.or('category.is.null,category.eq.')
+  } else if (selectedCategory !== 'all') {
+    inboxQuery = inboxQuery.eq('category', selectedCategory)
+  }
+
+  if (searchTerm) {
+    const escapedSearch = searchTerm.replace(/,/g, ' ').replace(/\./g, ' ')
+    inboxQuery = inboxQuery.or(
+      `title.ilike.%${escapedSearch}%,description.ilike.%${escapedSearch}%,publisher.ilike.%${escapedSearch}%`
+    )
+  }
+
+  if (selectedSort === 'oldest') {
+    inboxQuery = inboxQuery.order('id', { ascending: true })
+  } else if (selectedSort === 'published_newest') {
+    inboxQuery = inboxQuery.order('published_at', { ascending: false })
+  } else if (selectedSort === 'published_oldest') {
+    inboxQuery = inboxQuery.order('published_at', { ascending: true })
+  } else if (selectedSort === 'title_az') {
+    inboxQuery = inboxQuery.order('title', { ascending: true })
+  } else if (selectedSort === 'title_za') {
+    inboxQuery = inboxQuery.order('title', { ascending: false })
+  } else {
+    inboxQuery = inboxQuery.order('id', { ascending: false })
   }
 
   const { data: inboxArticles, error: inboxError } = await inboxQuery
@@ -191,6 +239,66 @@ export default async function NewsletterCuratePage({ params }: PageProps) {
                 Inbox {inboxArticles?.length || 0}
               </span>
             </div>
+
+            <form className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto_auto] sm:items-end">
+              <div>
+                <label className="mb-1 block type-caption text-(--color-text-secondary)">Search</label>
+                <input
+                  type="text"
+                  name="search"
+                  defaultValue={searchTerm}
+                  placeholder="Search title, description, publisher"
+                  className="w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) px-3 py-2 type-caption text-(--color-text-primary) focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block type-caption text-(--color-text-secondary)">Category</label>
+                <select
+                  name="category"
+                  defaultValue={selectedCategory}
+                  className="w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) px-3 py-2 type-caption text-(--color-text-primary) focus:outline-none"
+                >
+                  <option value="all">All</option>
+                  <option value="feature">Feature</option>
+                  <option value="brief">Brief</option>
+                  <option value="economy">Economy</option>
+                  <option value="research">Research</option>
+                  <option value="uncategorized">Uncategorized</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-1 block type-caption text-(--color-text-secondary)">Sort</label>
+                <select
+                  name="sort"
+                  defaultValue={selectedSort}
+                  className="w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) px-3 py-2 type-caption text-(--color-text-primary) focus:outline-none"
+                >
+                  <option value="newest">Newest</option>
+                  <option value="oldest">Oldest</option>
+                  <option value="published_newest">Publish Date (Newest)</option>
+                  <option value="published_oldest">Publish Date (Oldest)</option>
+                  <option value="title_az">Title (A-Z)</option>
+                  <option value="title_za">Title (Z-A)</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="submit"
+                  className="rounded-md border border-(--color-card-border) bg-(--color-text-primary) px-3 py-2 type-caption font-medium text-(--color-bg-primary) transition hover:opacity-90"
+                >
+                  Apply
+                </button>
+                <a
+                  href={`/admin/newsletters/${newsletterId}/curate`}
+                  className="rounded-md border border-(--color-card-border) px-3 py-2 type-caption text-(--color-text-primary) hover:bg-(--color-bg-secondary)"
+                >
+                  Reset
+                </a>
+              </div>
+            </form>
           </header>
 
           <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3 md:p-4">
@@ -202,6 +310,7 @@ export default async function NewsletterCuratePage({ params }: PageProps) {
                 url: string | null
                 publisher: string | null
                 published_at: string | null
+                category?: string | null
               }) => (
                 <article
                   key={article.id}

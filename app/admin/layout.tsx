@@ -18,6 +18,11 @@ export default async function AdminLayout({
     redirect('/login')
   }
 
+  const { data: newsletters } = await supabase
+    .from('newsletters')
+    .select('id, title, publish_date')
+    .order('publish_date', { ascending: false, nullsFirst: false })
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-(--color-bg-primary)">
       <nav className="mb-8 border-b border-(--color-card-border) bg-(--color-card-bg)">
@@ -26,7 +31,7 @@ export default async function AdminLayout({
             <Link href="/admin" className="type-subtitle text-(--color-text-primary) hover:text-accent-primary">
               Admin Dashboard
             </Link>
-            <AdminNavLinks />
+            <AdminNavLinks newsletters={newsletters || []} />
           </div>
           <div className="flex gap-4 items-center">
             <ThemeToggle />

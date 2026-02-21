@@ -282,7 +282,7 @@ export default async function NewsletterDesignPage({ params }: PageProps) {
                       </div>
 
                       <div>
-                      <label className="mb-1 block type-caption text-(--color-text-secondary)">Sub Title</label>
+                      <label className="mb-1 block type-caption text-(--color-text-secondary)">Sub-title</label>
                       <input
                         type="text"
                         name="sub_title"

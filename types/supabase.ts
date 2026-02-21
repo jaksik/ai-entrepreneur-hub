@@ -19,6 +19,7 @@ export type Database = {
           id: number
           title: string | null
           description: string | null
+          source: string | null
           url: string | null
           publisher: string | null
           category: string | null
@@ -29,6 +30,7 @@ export type Database = {
           id?: never
           title?: string | null
           description?: string | null
+          source?: string | null
           url?: string | null
           publisher?: string | null
           category?: string | null
@@ -39,6 +41,7 @@ export type Database = {
           id?: never
           title?: string | null
           description?: string | null
+          source?: string | null
           url?: string | null
           publisher?: string | null
           category?: string | null

@@ -16,25 +16,45 @@ export async function createNewsletter(formData: FormData) {
   const db = supabase
 
   const title = (formData.get('title') as string)?.trim()
+  const subTitleInput = formData.get('sub_title')
   const publishDateInput = formData.get('publish_date') as string
+  const statusInput = formData.get('status')
+  const coverImageInput = formData.get('cover_image')
 
   if (!title) {
     throw new Error('Newsletter title is required')
   }
 
+  const sub_title = typeof subTitleInput === 'string' ? subTitleInput.trim() : ''
   const publish_date = publishDateInput ? new Date(publishDateInput).toISOString() : null
+  const allowedStatuses = new Set(['draft', 'scheduled', 'sent', 'archived'])
+  const normalizedStatus = typeof statusInput === 'string' ? statusInput.trim().toLowerCase() : 'draft'
+  const status = allowedStatuses.has(normalizedStatus) ? normalizedStatus : 'draft'
+  const cover_image = typeof coverImageInput === 'string' ? coverImageInput.trim() : ''
 
-  const { error } = await db.from('newsletters').insert({
-    title,
-    publish_date,
-    status: 'draft',
-  })
+  const { data, error } = await db
+    .from('newsletters')
+    .insert({
+      title,
+      sub_title: sub_title || null,
+      publish_date,
+      status,
+      cover_image: cover_image || null,
+    })
+    .select('id')
+    .single()
 
   if (error) {
     throw new Error('Failed to create newsletter')
   }
 
   revalidatePath('/admin/newsletters')
+
+  if (!data?.id) {
+    throw new Error('Newsletter created but id was not returned')
+  }
+
+  return data.id
 }
 
 export async function updateNewsletterDetails(formData: FormData) {
@@ -246,7 +266,7 @@ export async function getNewsletterBeehiivData(newsletterId: number) {
 
   const { data: newsletter, error: newsletterError } = await db
     .from('newsletters')
-    .select('id, title, sub_title, cover_image')
+    .select('id, title, sub_title, cover_image, cover_article')
     .eq('id', newsletterId)
     .single()
 
@@ -256,7 +276,7 @@ export async function getNewsletterBeehiivData(newsletterId: number) {
 
   const { data: articles, error: articlesError } = await db
     .from('newsletter_articles')
-    .select('id, title, ai_title, url, newsletter_category')
+    .select('id, title, description, ai_title, ai_description, url, newsletter_category')
     .eq('newsletter_id', newsletterId)
     .order('id', { ascending: true })
 

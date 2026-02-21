@@ -3,11 +3,19 @@
 import Image from 'next/image'
 import { useEffect, useMemo, useState } from 'react'
 import { getNewsletterBeehiivData } from '../../actions'
+import {
+  NEWSLETTER_CATEGORY_LABELS,
+  NEWSLETTER_CATEGORY_ORDER,
+  NEWSLETTER_MARKET_TABLE_COLUMNS,
+  NEWSLETTER_MARKET_TABLE_PLACEHOLDER_ROWS,
+} from './newsletterLayout'
 
 type BeehiivArticle = {
   id: number
   title: string | null
+  description: string | null
   ai_title: string | null
+  ai_description: string | null
   url: string | null
   newsletter_category: string | null
 }
@@ -18,11 +26,18 @@ type BeehiivPayload = {
     title: string | null
     sub_title: string | null
     cover_image: string | null
+    cover_article: number | null
   }
   articles: BeehiivArticle[]
 }
 
-const ORDERED_CATEGORIES = ['feature', 'brief', 'economy', 'research', 'uncategorized'] as const
+function getArticleDisplayTitle(article: BeehiivArticle) {
+  return article.ai_title?.trim() || article.title?.trim() || 'Untitled article'
+}
+
+function getArticleDisplayDescription(article: BeehiivArticle) {
+  return article.ai_description?.trim() || article.description?.trim() || ''
+}
 
 function normalizeCategory(value: string | null | undefined) {
   const normalized = value?.trim().toLowerCase()
@@ -31,8 +46,7 @@ function normalizeCategory(value: string | null | undefined) {
 }
 
 function formatCategoryLabel(value: string) {
-  if (value === 'uncategorized') return 'Uncategorized'
-  return value.charAt(0).toUpperCase() + value.slice(1)
+  return NEWSLETTER_CATEGORY_LABELS[value] || value.charAt(0).toUpperCase() + value.slice(1)
 }
 
 function escapeHtml(value: string) {
@@ -75,6 +89,7 @@ function toSafeImageUrl(value: string | null | undefined) {
 }
 
 function buildBeehiivHtml(
+  coverArticle: BeehiivArticle | null,
   grouped: Record<string, BeehiivArticle[]>,
   coverImageUrl: string | null,
   newsletterTitle: string | null
@@ -84,50 +99,99 @@ function buildBeehiivHtml(
     ? `<p><img src="${escapeHtml(safeCoverImageUrl)}" alt="${escapeHtml(newsletterTitle?.trim() || 'Newsletter cover image')}" style="max-width:100%;height:auto;" /></p>`
     : ''
 
-  const sections = ORDERED_CATEGORIES
-    .filter((key) => (grouped[key] || []).length > 0)
+  const coverArticleMarkup = coverArticle
+    ? `<p><a href="${escapeHtml(toSafeUrl(coverArticle.url))}">${escapeHtml(getArticleDisplayTitle(coverArticle))}</a></p><p>${escapeHtml(getArticleDisplayDescription(coverArticle))}</p>`
+    : ''
+
+  const placeholderTableRowsMarkup = NEWSLETTER_MARKET_TABLE_PLACEHOLDER_ROWS
+    .map(
+      (row) =>
+        `<tr><td style="padding:10px;border:1px solid #d1d5db;">${escapeHtml(row.sector)}</td><td style="padding:10px;border:1px solid #d1d5db;">${escapeHtml(row.leader)}</td><td style="padding:10px;border:1px solid #d1d5db;">${escapeHtml(row.laggard)}</td></tr>`
+    )
+    .join('')
+
+  const placeholderTable = `
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;width:100%;margin-top:12px;border:1px solid #d1d5db;">
+      <thead>
+        <tr>
+          ${NEWSLETTER_MARKET_TABLE_COLUMNS.map(
+            (column) => `<th align="left" style="padding:10px;border:1px solid #d1d5db;background:#f3f4f6;">${escapeHtml(column)}</th>`
+          ).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${placeholderTableRowsMarkup}
+      </tbody>
+    </table>
+  `
+
+  const sections = NEWSLETTER_CATEGORY_ORDER
+    .filter((key) => key === 'economy' || (grouped[key] || []).length > 0)
     .map((key) => {
       const categoryLabel = formatCategoryLabel(key)
       const articleMarkup = (grouped[key] || [])
         .map((article) => {
-          const title = article.ai_title?.trim() || article.title?.trim() || 'Untitled article'
+          const title = getArticleDisplayTitle(article)
+          const description = getArticleDisplayDescription(article)
           const url = toSafeUrl(article.url)
-          return `<p><a href="${escapeHtml(url)}">${escapeHtml(title)}</a></p>`
+          return `<p><a href="${escapeHtml(url)}">${escapeHtml(title)}</a></p><p>${escapeHtml(description)}</p>`
         })
         .join('')
+
+      if (key === 'feature') {
+        return articleMarkup
+      }
+
+      if (key === 'economy') {
+        return `<h2>${escapeHtml(categoryLabel)}</h2>${placeholderTable}${articleMarkup}`
+      }
 
       return `<h2>${escapeHtml(categoryLabel)}</h2>${articleMarkup}`
     })
     .join('')
 
-  return `<div>${coverImageMarkup}${sections}</div>`
+  return `<div>${coverImageMarkup}${coverArticleMarkup}${sections}</div>`
 }
 
-function buildPlainText(grouped: Record<string, BeehiivArticle[]>, coverImageUrl: string | null) {
+function buildPlainText(
+  coverArticle: BeehiivArticle | null,
+  grouped: Record<string, BeehiivArticle[]>,
+  coverImageUrl: string | null
+) {
   const safeCoverImageUrl = toSafeImageUrl(coverImageUrl)
-  const articleSections = ORDERED_CATEGORIES
+  const coverArticleSection = coverArticle
+    ? `- ${getArticleDisplayTitle(coverArticle)} (${toSafeUrl(coverArticle.url)})\n  ${getArticleDisplayDescription(coverArticle)}`
+    : ''
+  const articleSections = NEWSLETTER_CATEGORY_ORDER
     .filter((key) => (grouped[key] || []).length > 0)
     .map((key) => {
       const categoryLabel = formatCategoryLabel(key)
       const lines = (grouped[key] || []).map((article) => {
-        const title = article.ai_title?.trim() || article.title?.trim() || 'Untitled article'
+        const title = getArticleDisplayTitle(article)
+        const description = getArticleDisplayDescription(article)
         const url = toSafeUrl(article.url)
-        return `- ${title} (${url})`
+        return `- ${title} (${url})${description ? `\n  ${description}` : ''}`
       })
+
+      if (key === 'feature') {
+        return lines.join('\n')
+      }
 
       return `${categoryLabel}\n${lines.join('\n')}`
     })
     .join('\n\n')
 
-  if (safeCoverImageUrl && articleSections) {
-    return `Cover Image: ${safeCoverImageUrl}\n\n${articleSections}`
+  const combinedSections = [coverArticleSection, articleSections].filter(Boolean).join('\n\n')
+
+  if (safeCoverImageUrl && combinedSections) {
+    return `Cover Image: ${safeCoverImageUrl}\n\n${combinedSections}`
   }
 
   if (safeCoverImageUrl) {
     return `Cover Image: ${safeCoverImageUrl}`
   }
 
-  return articleSections
+  return combinedSections
 }
 
 export default function GenerateClient({ newsletterId }: { newsletterId: number }) {
@@ -137,10 +201,19 @@ export default function GenerateClient({ newsletterId }: { newsletterId: number 
   const [error, setError] = useState<string | null>(null)
   const [payload, setPayload] = useState<BeehiivPayload | null>(null)
 
+  const coverArticle = useMemo(() => {
+    if (!payload?.articles?.length || !payload.newsletter.cover_article) return null
+    return payload.articles.find((article) => article.id === payload.newsletter.cover_article) || null
+  }, [payload])
+
   const groupedArticles = useMemo(() => {
     if (!payload?.articles?.length) return {}
 
-    return payload.articles.reduce<Record<string, BeehiivArticle[]>>((acc, article) => {
+    const nonCoverArticles = payload.newsletter.cover_article
+      ? payload.articles.filter((article) => article.id !== payload.newsletter.cover_article)
+      : payload.articles
+
+    return nonCoverArticles.reduce<Record<string, BeehiivArticle[]>>((acc, article) => {
       const key = normalizeCategory(article.newsletter_category)
       if (!acc[key]) {
         acc[key] = []
@@ -195,11 +268,12 @@ export default function GenerateClient({ newsletterId }: { newsletterId: number 
 
     try {
       const html = buildBeehiivHtml(
+        coverArticle,
         groupedArticles,
         payload.newsletter.cover_image,
         payload.newsletter.title
       )
-      const plainText = buildPlainText(groupedArticles, payload.newsletter.cover_image)
+      const plainText = buildPlainText(coverArticle, groupedArticles, payload.newsletter.cover_image)
 
       if (typeof window !== 'undefined' && navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
         const clipboardItem = new ClipboardItem({
@@ -255,31 +329,78 @@ export default function GenerateClient({ newsletterId }: { newsletterId: number 
               </section>
             ) : null}
 
+            {coverArticle ? (
+              <section>
+                <a
+                  href={toSafeUrl(coverArticle.url)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block type-body text-(--color-text-primary) underline decoration-(--color-card-border) underline-offset-2 hover:text-accent-primary"
+                >
+                  {getArticleDisplayTitle(coverArticle)}
+                </a>
+                {getArticleDisplayDescription(coverArticle) ? (
+                  <p className="mt-1 type-caption text-(--color-text-secondary)">{getArticleDisplayDescription(coverArticle)}</p>
+                ) : null}
+              </section>
+            ) : null}
+
             {payload.articles?.length ? (
-              ORDERED_CATEGORIES.map((categoryKey) => {
+              NEWSLETTER_CATEGORY_ORDER.map((categoryKey) => {
                 const articles = groupedArticles[categoryKey] || []
-                if (!articles.length) return null
+                if (categoryKey !== 'economy' && !articles.length) return null
 
                 return (
                   <section key={categoryKey}>
-                    <h2 className="mb-2 type-subtitle text-(--color-text-primary)">
-                      {formatCategoryLabel(categoryKey)}
-                    </h2>
+                    {categoryKey !== 'feature' ? (
+                      <h2 className="mb-2 type-subtitle text-(--color-text-primary)">
+                        {formatCategoryLabel(categoryKey)}
+                      </h2>
+                    ) : null}
+
+                    {categoryKey === 'economy' ? (
+                      <section className="mb-3 overflow-x-auto rounded-lg border border-(--color-card-border)">
+                        <table className="w-full border-collapse">
+                          <thead className="bg-(--color-card-bg)">
+                            <tr>
+                              {NEWSLETTER_MARKET_TABLE_COLUMNS.map((column) => (
+                                <th key={column} className="px-3 py-2 text-left type-caption text-(--color-text-secondary)">{column}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-(--color-card-border) bg-(--color-bg-secondary)">
+                            {NEWSLETTER_MARKET_TABLE_PLACEHOLDER_ROWS.map((row) => (
+                              <tr key={row.sector}>
+                                <td className="px-3 py-2 type-body text-(--color-text-primary)">{row.sector}</td>
+                                <td className="px-3 py-2 type-body text-(--color-text-primary)">{row.leader}</td>
+                                <td className="px-3 py-2 type-body text-(--color-text-primary)">{row.laggard}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </section>
+                    ) : null}
+
                     <div className="space-y-2">
                       {articles.map((article) => {
-                        const title = article.ai_title?.trim() || article.title?.trim() || 'Untitled article'
+                        const title = getArticleDisplayTitle(article)
+                        const description = getArticleDisplayDescription(article)
                         const url = toSafeUrl(article.url)
 
                         return (
-                          <a
-                            key={article.id}
-                            href={url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block type-body text-(--color-text-primary) underline decoration-(--color-card-border) underline-offset-2 hover:text-accent-primary"
-                          >
-                            {title}
-                          </a>
+                          <div key={article.id}>
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="block type-body text-(--color-text-primary) underline decoration-(--color-card-border) underline-offset-2 hover:text-accent-primary"
+                            >
+                              {title}
+                            </a>
+                            {description ? (
+                              <p className="mt-1 type-caption text-(--color-text-secondary)">{description}</p>
+                            ) : null}
+                          </div>
                         )
                       })}
                     </div>
