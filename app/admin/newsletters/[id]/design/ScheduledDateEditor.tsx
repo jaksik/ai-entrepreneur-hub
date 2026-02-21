@@ -99,7 +99,7 @@ export default function ScheduledDateEditor({
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-md border border-accent-primary bg-accent-primary px-3 py-2 type-caption font-medium text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-md border border-(--color-card-border) bg-(--color-text-primary) px-3 py-2 type-caption font-medium text-(--color-bg-primary) transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending ? 'Saving...' : 'Save'}
         </button>

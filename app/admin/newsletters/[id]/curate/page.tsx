@@ -88,7 +88,7 @@ export default async function NewsletterCuratePage({ params }: PageProps) {
 
   const { data: selectedNewsletter, error: newsletterError } = await db
     .from('newsletters')
-    .select('id, title, publish_date')
+    .select('id, title, sub_title, publish_date')
     .eq('id', newsletterId)
     .maybeSingle()
 
@@ -171,22 +171,21 @@ export default async function NewsletterCuratePage({ params }: PageProps) {
         <h2 className="type-title text-(--color-text-primary)">Article Curation</h2>
       </div> */}
 
-      <div className="mb-4 rounded-xl border border-(--color-card-border) bg-(--color-card-bg) p-4">
+      {/* <div className="mb-4 rounded-xl border border-(--color-card-border) bg-(--color-card-bg) p-4">
         <p className="type-caption text-(--color-text-secondary)">Curating newsletter:</p>
         <h3 className="type-subtitle py-2 text-(--color-text-primary)">{selectedNewsletter.title || `Newsletter #${newsletterId}`}</h3>
         <p className="type-caption text-(--color-text-secondary)">
           Scheduled Date: <span className="font-medium text-(--color-text-primary)">{formatPublishedAt(selectedNewsletter.publish_date)}</span>
         </p>
-      </div>
+      </div> */}
 
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-2">
         <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-(--color-card-border) bg-(--color-card-bg)">
           <header className="border-b border-(--color-card-border) bg-(--color-bg-secondary) px-4 py-3 md:px-5 md:py-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="type-caption text-(--color-text-secondary)">Articles from:</p>
-                <h2 className="type-subtitle py-3 text-3xl text-(--color-text-primary)">AI-News Database</h2>
-                <p className="text-lg type-caption text-(--color-text-secondary)">Articles not yet added to newsletter:</p>
+                <h2 className="type-subtitle text-2xl text-(--color-text-primary)">Article Database</h2>
+                <p className="mt-1 type-caption text-(--color-text-secondary)">Articles not yet added to newsletters:</p>
               </div>
               <span className="inline-flex items-center rounded-full border border-(--color-card-border) bg-(--color-card-bg) px-3 py-1 type-caption text-(--color-text-secondary)">
                 Inbox {inboxArticles?.length || 0}
@@ -255,23 +254,42 @@ export default async function NewsletterCuratePage({ params }: PageProps) {
 
         <section className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-(--color-card-border) bg-(--color-card-bg)">
           <header className="border-b border-(--color-card-border) bg-(--color-bg-secondary) px-4 py-3 md:px-5 md:py-4">
-            <div className="ml-auto w-fit">
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                {categorySummary.map((item) => {
-                  const tone = getCategoryTone(item.key)
+            <div className="flex flex-col gap-3">
+              <div>
+                <h2 className="type-subtitle text-2xl text-(--color-text-primary)">
+                  {selectedNewsletter.title || `Newsletter #${newsletterId}`}
+                </h2>
+                <p className="mt-1 type-caption text-(--color-text-secondary)">
+                  {selectedNewsletter.sub_title || 'No sub-title set'}
+                </p>
+              </div>
 
-                  return (
-                    <span
-                      key={item.key}
-                      className={`inline-flex items-center justify-center gap-1.5 rounded-full border px-3 py-1 type-caption ${
-                        item.count > 0 ? tone.chip : 'border-(--color-card-border) bg-(--color-bg-secondary) text-(--color-text-secondary)'
-                      }`}
-                    >
-                      <span className="text-lg">{item.label}:</span>
-                      <span className="text-lg">{item.count}</span>
-                    </span>
-                  )
-                })}
+              <div className="flex items-center justify-between gap-3">
+                <p className="type-caption text-(--color-text-secondary)">
+                  Publish Date: <span className="font-medium text-(--color-text-primary)">{formatPublishedAt(selectedNewsletter.publish_date)}</span>
+                </p>
+
+                <div className="ml-auto w-fit">
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {categorySummary.map((item) => {
+                      const tone = getCategoryTone(item.key)
+
+                      return (
+                        <span
+                          key={item.key}
+                          className={`inline-flex items-center justify-center gap-1.5 rounded-full border px-3 py-1 type-caption ${
+                            item.count > 0 ? tone.chip : 'border-(--color-card-border) bg-(--color-bg-secondary) text-(--color-text-secondary)'
+                          }`}
+                        >
+                          {item.key !== 'uncategorized' ? (
+                            <span className="text-md">{item.label}:</span>
+                          ) : null}
+                          <span className="text-md">{item.count}</span>
+                        </span>
+                      )
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
           </header>

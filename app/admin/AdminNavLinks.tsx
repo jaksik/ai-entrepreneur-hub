@@ -11,6 +11,18 @@ const navItems = [
 
 export default function AdminNavLinks() {
   const pathname = usePathname()
+  const newsletterDetailMatch = pathname.match(/^\/admin\/newsletters\/(\d+)/)
+  const newsletterId = newsletterDetailMatch?.[1]
+
+  const newsletterSectionItems = newsletterId
+    ? [
+        { href: `/admin/newsletters/${newsletterId}/curate`, label: 'Curate' },
+        { href: `/admin/newsletters/${newsletterId}/design`, label: 'Design' },
+        { href: `/admin/newsletters/${newsletterId}/generate`, label: 'Generate' },
+      ]
+    : []
+
+  const items = [...navItems, ...newsletterSectionItems]
 
   const isActive = (href: string) => {
     const baseHref = href.split('?')[0]
@@ -20,7 +32,7 @@ export default function AdminNavLinks() {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {navItems.map((item) => (
+      {items.map((item) => (
         <Link
           key={item.href}
           href={item.href}
