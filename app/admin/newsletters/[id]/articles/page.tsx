@@ -23,6 +23,7 @@ type ArticleRow = {
 
 const SORTABLE_COLUMNS = ['created_at', 'source', 'publisher', 'category', 'title_snippets', 'title'] as const
 const PAGE_SIZE_OPTIONS = [25, 50, 100, 200, 500] as const
+const CATEGORY_SORT_ORDER = ['feature', 'economy', 'brief', 'research'] as const
 
 function getSingleSearchParam(value: string | string[] | undefined) {
   if (Array.isArray(value)) return value[0]
@@ -60,6 +61,7 @@ export default async function NewsletterArticlesPage({ params, searchParams }: P
   const rawSort = getSingleSearchParam(resolvedSearchParams.sort)
   const rawDir = getSingleSearchParam(resolvedSearchParams.dir)
   const rawLimit = getSingleSearchParam(resolvedSearchParams.limit)
+  const rawCategorySort = getSingleSearchParam(resolvedSearchParams.category_sort)
 
   const sortColumn = SORTABLE_COLUMNS.includes((rawSort || '') as typeof SORTABLE_COLUMNS[number])
     ? (rawSort as typeof SORTABLE_COLUMNS[number])
@@ -69,6 +71,7 @@ export default async function NewsletterArticlesPage({ params, searchParams }: P
   const pageSize = PAGE_SIZE_OPTIONS.includes(parsedLimit as typeof PAGE_SIZE_OPTIONS[number])
     ? (parsedLimit as typeof PAGE_SIZE_OPTIONS[number])
     : 100
+  const sortByCategories = rawCategorySort === 'ordered'
 
   const supabase = await createClient()
   const primarySortColumn =
@@ -120,6 +123,22 @@ export default async function NewsletterArticlesPage({ params, searchParams }: P
     })
   }
 
+  if (sortByCategories && articles?.length) {
+    articles = [...articles].sort((left, right) => {
+      const leftCategory = getCategorySortValue(left.newsletter_category)
+      const rightCategory = getCategorySortValue(right.newsletter_category)
+
+      const leftIndex = CATEGORY_SORT_ORDER.indexOf(leftCategory as typeof CATEGORY_SORT_ORDER[number])
+      const rightIndex = CATEGORY_SORT_ORDER.indexOf(rightCategory as typeof CATEGORY_SORT_ORDER[number])
+
+      const leftRank = leftIndex === -1 ? CATEGORY_SORT_ORDER.length : leftIndex
+      const rightRank = rightIndex === -1 ? CATEGORY_SORT_ORDER.length : rightIndex
+
+      if (leftRank !== rightRank) return leftRank - rightRank
+      return right.id - left.id
+    })
+  }
+
   const { data: curatedArticles, error: curatedError } = await supabase
     .from('articles')
     .select('newsletter_category:category')
@@ -135,6 +154,18 @@ export default async function NewsletterArticlesPage({ params, searchParams }: P
     params.set('sort', column)
     params.set('dir', nextDir)
     params.set('limit', String(pageSize))
+    if (sortByCategories) {
+      params.set('category_sort', 'ordered')
+    }
+    return `/admin/newsletters/${newsletterId}/articles?${params.toString()}`
+  }
+
+  const getCategorySortLink = () => {
+    const params = new URLSearchParams()
+    params.set('sort', sortColumn)
+    params.set('dir', sortDirection)
+    params.set('limit', String(pageSize))
+    params.set('category_sort', sortByCategories ? 'off' : 'ordered')
     return `/admin/newsletters/${newsletterId}/articles?${params.toString()}`
   }
 
@@ -153,7 +184,7 @@ export default async function NewsletterArticlesPage({ params, searchParams }: P
         <form className="flex items-center gap-1.5">
           <input type="hidden" name="sort" value={sortColumn} />
           <input type="hidden" name="dir" value={sortDirection} />
-          <label htmlFor="limit" className="type-caption text-(--color-text-secondary)">Show</label>
+          <input type="hidden" name="category_sort" value={sortByCategories ? 'ordered' : 'off'} />
           <LimitSelect
             id="limit"
             name="limit"
@@ -161,13 +192,23 @@ export default async function NewsletterArticlesPage({ params, searchParams }: P
             options={PAGE_SIZE_OPTIONS}
             className="w-18 rounded-md border border-(--color-input-border) bg-(--color-input-bg) px-2 py-1.5 type-caption text-(--color-text-primary) focus:outline-none"
           />
-          <span className="type-caption text-(--color-text-secondary)">articles</span>
+          <Link
+            href={getCategorySortLink()}
+            className={`inline-flex items-center justify-center rounded-md border px-3 py-1.5 type-caption font-medium transition ${sortByCategories
+              ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300'
+              : 'border-(--color-card-border) text-(--color-text-primary) hover:bg-(--color-bg-secondary)'
+              }`}
+          >
+            Sort by Categorie
+          </Link>
         </form>
 
-        <CategoryCountRow
-          categories={(curatedArticles || []).map((article: { newsletter_category: string | null }) => article.newsletter_category)}
-          align="right"
-        />
+        <div className="flex items-center gap-2">
+          <CategoryCountRow
+            categories={(curatedArticles || []).map((article: { newsletter_category: string | null }) => article.newsletter_category)}
+            align="right"
+          />
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-lg border border-(--color-card-border) bg-(--color-card-bg)">

@@ -25,15 +25,14 @@ function formatPublishDate(value: string | null) {
 
 const navItems = [
   { href: '/admin/tools', label: 'Tools' },
-  { href: '/admin/jobs', label: 'Jobs' },
 ]
 
 export default function AdminNavLinks({ newsletters }: { newsletters: NewsletterOption[] }) {
   const pathname = usePathname()
   const router = useRouter()
-  const newsletterDetailMatch = pathname.match(/^\/admin\/newsletters\/(\d+)(?:\/(articles|curate|design|generate))?/) 
+  const newsletterDetailMatch = pathname.match(/^\/admin\/newsletters\/(\d+)(?:\/(articles|jobs|curate|design|generate))?/) 
   const pathnameNewsletterId = newsletterDetailMatch?.[1] || ''
-  const pathnameSection = newsletterDetailMatch?.[2] as 'articles' | 'curate' | 'design' | 'generate' | undefined
+  const pathnameSection = newsletterDetailMatch?.[2] as 'articles' | 'jobs' | 'curate' | 'design' | 'generate' | undefined
 
   const [selectedNewsletterId, setSelectedNewsletterId] = useState(pathnameSection ? pathnameNewsletterId : '')
 
@@ -51,6 +50,7 @@ export default function AdminNavLinks({ newsletters }: { newsletters: Newsletter
 
     return [
       { href: `/admin/newsletters/${selectedNewsletterId}/articles`, label: 'Articles' },
+      { href: `/admin/newsletters/${selectedNewsletterId}/jobs`, label: 'Jobs' },
       { href: `/admin/newsletters/${selectedNewsletterId}/curate`, label: 'Curate' },
       { href: `/admin/newsletters/${selectedNewsletterId}/design`, label: 'Design' },
       { href: `/admin/newsletters/${selectedNewsletterId}/generate`, label: 'Generate' },
