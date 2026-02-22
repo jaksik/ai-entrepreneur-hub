@@ -1,9 +1,10 @@
 import { createClient } from '@/utils/supabase/server'
-import { importGoogleJobs } from './actions'
+import { addJobToNewsletter, importGoogleJobs } from './actions'
 
 const QUERY_OPTIONS = ['AI Enablement', 'AI Automation', 'AI Sales', 'AI Research', 'AI Content Strategist', 'AI Security'] as const
 
 type PageProps = {
+  params: Promise<{ id: string }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
@@ -50,7 +51,14 @@ function getStatusAlertStyles(status: string | undefined) {
   return 'border-emerald-500/35 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
 }
 
-export default async function AdminJobsPage({ searchParams }: PageProps) {
+export default async function NewsletterJobsPage({ params, searchParams }: PageProps) {
+  const { id: newsletterIdParam } = await params
+  const newsletterId = Number(newsletterIdParam)
+
+  if (!Number.isInteger(newsletterId) || newsletterId <= 0) {
+    throw new Error('Invalid newsletter id')
+  }
+
   const supabase = await createClient()
   const resolvedSearchParams = await searchParams
 
@@ -58,35 +66,21 @@ export default async function AdminJobsPage({ searchParams }: PageProps) {
   const message = getSingleSearchParam(resolvedSearchParams.message)
   const imported = getSingleSearchParam(resolvedSearchParams.imported)
 
-  const [{ data: newsletters, error: newslettersError }, { data: jobs, error: jobsError }] = await Promise.all([
-    supabase
-      .from('newsletters')
-      .select('id, title, publish_date')
-      .order('publish_date', { ascending: false, nullsFirst: false }),
-    supabase
-      .from('job_postings')
-      .select('id, created_at, newsletter_id, title, company, location, apply_link, remote, posted_date')
-      .order('created_at', { ascending: false })
-      .limit(200),
-  ])
-
-  if (newslettersError) {
-    throw new Error('Failed to fetch newsletters')
-  }
+  const { data: jobs, error: jobsError } = await supabase
+    .from('job_postings')
+    .select('id, created_at, newsletter_id, title, company, location, apply_link, remote, posted_date')
+    .order('created_at', { ascending: false })
+    .limit(200)
 
   if (jobsError) {
     throw new Error('Failed to fetch job postings')
   }
 
-  const newsletterTitleById = new Map(
-    (newsletters || []).map((newsletter) => [newsletter.id, newsletter.title || `Newsletter #${newsletter.id}`])
-  )
-
   return (
     <section className="w-full bg-(--color-bg-primary)">
       <div className="mb-6">
         <h2 className="type-title text-(--color-text-primary)">Jobs</h2>
-        <p className="type-caption text-(--color-text-secondary)">Import Google Jobs via SerpAPI and store results in `job_postings`.</p>
+        <p className="type-caption text-(--color-text-secondary)">Import Google Jobs via SerpAPI and add selected jobs to this newsletter.</p>
       </div>
 
       {status ? (
@@ -98,7 +92,7 @@ export default async function AdminJobsPage({ searchParams }: PageProps) {
       ) : null}
 
       <div className="rounded-xl border border-(--color-card-border) bg-(--color-card-bg) p-5">
-        <form action={importGoogleJobs} className="space-y-4">
+        <form action={importGoogleJobs.bind(null, newsletterId)} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label className="mb-1 block type-caption text-(--color-text-secondary)">Query</label>
@@ -176,7 +170,7 @@ export default async function AdminJobsPage({ searchParams }: PageProps) {
           <thead className="bg-(--color-bg-secondary)">
             <tr>
               <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Created</th>
-              <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Newsletter</th>
+              <th className="px-4 py-3 text-center type-caption text-(--color-text-secondary)">+</th>
               <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Title</th>
               <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Company</th>
               <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Location</th>
@@ -192,8 +186,16 @@ export default async function AdminJobsPage({ searchParams }: PageProps) {
                   <td className="px-4 py-3 align-top whitespace-nowrap type-caption text-(--color-text-secondary)">
                     {formatDateTime(job.created_at)}
                   </td>
-                  <td className="px-4 py-3 align-top whitespace-nowrap type-caption text-(--color-text-secondary)">
-                    {job.newsletter_id ? newsletterTitleById.get(job.newsletter_id) || `Newsletter #${job.newsletter_id}` : '—'}
+                  <td className="px-4 py-3 align-top whitespace-nowrap text-center type-caption">
+                    <form action={addJobToNewsletter.bind(null, job.id, newsletterId)}>
+                      <button
+                        type="submit"
+                        className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-(--color-card-border) text-base text-emerald-600 transition hover:bg-emerald-500/10 dark:text-emerald-300"
+                        title="Add to selected newsletter"
+                      >
+                        +
+                      </button>
+                    </form>
                   </td>
                   <td className="px-4 py-3 align-top max-w-md type-body text-(--color-text-primary)">{job.title || '—'}</td>
                   <td className="px-4 py-3 align-top whitespace-nowrap type-caption text-(--color-text-secondary)">{job.company || '—'}</td>

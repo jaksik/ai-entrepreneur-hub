@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import { setNewsletterCoverArticle, updateNewsletterDetails } from '../../actions'
 import { removeArticleFromNewsletter } from '../curate/actions'
+import { removeJobFromNewsletter } from '../jobs/actions'
 import Link from 'next/link'
 import CategorySelect from '../../CategorySelect'
 import CategoryCountRow from '../../CategoryCountRow'
@@ -25,6 +26,15 @@ type CuratedArticleRow = {
   publisher: string | null
 }
 
+type JobPostingRow = {
+  id: number
+  title: string | null
+  company: string | null
+  location: string | null
+  apply_link: string | null
+  posted_date: string | null
+}
+
 const CATEGORY_SORT_ORDER = ['feature', 'economy', 'brief', 'research'] as const
 
 function getSingleSearchParam(value: string | string[] | undefined) {
@@ -33,6 +43,19 @@ function getSingleSearchParam(value: string | string[] | undefined) {
 }
 
 function formatPublishedAt(value: string | null) {
+  if (!value) return 'No date'
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return 'No date'
+
+  return parsed.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function formatPostedDate(value: string | null) {
   if (!value) return 'No date'
 
   const parsed = new Date(value)
@@ -175,6 +198,16 @@ export default async function NewsletterDesignPage({ params, searchParams }: Pag
 
   if (articlesError) {
     throw new Error(`Failed to fetch newsletter articles: ${articlesError.message}`)
+  }
+
+  const { data: jobPostings, error: jobPostingsError } = await db
+    .from('job_postings')
+    .select('id, title, company, location, apply_link, posted_date')
+    .eq('newsletter_id', newsletterId)
+    .order('posted_date', { ascending: false, nullsFirst: false })
+
+  if (jobPostingsError) {
+    throw new Error('Failed to fetch newsletter job postings')
   }
 
   const sortedCuratedArticles = sortByCategories
@@ -474,7 +507,63 @@ export default async function NewsletterDesignPage({ params, searchParams }: Pag
                 </summary>
 
                 <div className="border-t border-(--color-card-border) p-4">
-                  <p className="type-caption text-(--color-text-secondary)">No job posting content yet.</p>
+                  {jobPostings?.length ? (
+                    <div className="overflow-hidden rounded-lg border border-(--color-card-border) bg-(--color-card-bg)">
+                      <table className="w-full border-collapse">
+                        <thead className="bg-(--color-bg-secondary)">
+                          <tr>
+                            <th className="px-4 py-2.5 text-left type-caption text-(--color-text-secondary)">Posted</th>
+                            <th className="px-4 py-2.5 text-left type-caption text-(--color-text-secondary)">Title</th>
+                            <th className="px-4 py-2.5 text-left type-caption text-(--color-text-secondary)">Company</th>
+                            <th className="px-4 py-2.5 text-left type-caption text-(--color-text-secondary)">Location</th>
+                            <th className="px-4 py-2.5 text-right type-caption text-(--color-text-secondary)">Remove</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {jobPostings.map((job: JobPostingRow) => (
+                            <tr key={job.id} className="border-t border-(--color-card-border)">
+                              <td className="px-4 py-3 align-top whitespace-nowrap type-caption text-(--color-text-secondary)">
+                                {formatPostedDate(job.posted_date)}
+                              </td>
+                              <td className="px-4 py-3 align-top type-body text-(--color-text-primary)">{job.title || '—'}</td>
+                              <td className="px-4 py-3 align-top whitespace-nowrap type-caption text-(--color-text-secondary)">{job.company || '—'}</td>
+                              <td className="px-4 py-3 align-top whitespace-nowrap type-caption text-(--color-text-secondary)">{job.location || '—'}</td>
+                              <td className="px-4 py-3 align-top whitespace-nowrap text-right type-caption">
+                                <form action={removeJobFromNewsletter.bind(null, job.id, newsletterId)}>
+                                  <button
+                                    type="submit"
+                                    className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-(--color-card-border) text-(--color-text-secondary) transition hover:bg-red-500/10 hover:text-red-500"
+                                    aria-label="Remove job from newsletter"
+                                    title="Remove from newsletter"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      className="h-4 w-4"
+                                      aria-hidden
+                                    >
+                                      <path d="M3 6h18" />
+                                      <path d="M8 6V4h8v2" />
+                                      <path d="M19 6l-1 14H6L5 6" />
+                                      <path d="M10 11v6" />
+                                      <path d="M14 11v6" />
+                                    </svg>
+                                  </button>
+                                </form>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="type-caption text-(--color-text-secondary)">No job postings associated with this newsletter yet.</p>
+                  )}
                 </div>
               </details>
             </div>

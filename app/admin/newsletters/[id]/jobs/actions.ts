@@ -114,7 +114,19 @@ function normalizeLocation(value: string | undefined) {
   return withoutParensSuffix || null
 }
 
-export async function importGoogleJobs(formData: FormData) {
+function getJobsPath(newsletterId: number) {
+  return `/admin/newsletters/${newsletterId}/jobs`
+}
+
+function getDesignPath(newsletterId: number) {
+  return `/admin/newsletters/${newsletterId}/design`
+}
+
+export async function importGoogleJobs(newsletterId: number, formData: FormData) {
+  if (!Number.isInteger(newsletterId) || newsletterId <= 0) {
+    throw new Error('Invalid newsletter id')
+  }
+
   const queryInput = formData.get('q')
   const locationInput = formData.get('location')
   const resultCountInput = formData.get('result_count')
@@ -133,12 +145,12 @@ export async function importGoogleJobs(formData: FormData) {
   const pagesToFetch = Math.ceil(resultCount / 10)
 
   if (!q) {
-    redirect('/admin/jobs?status=error&message=Search%20query%20is%20required')
+    redirect(`${getJobsPath(newsletterId)}?status=error&message=Search%20query%20is%20required`)
   }
 
   const apiKey = getSerpApiKey()
   if (!apiKey) {
-    redirect('/admin/jobs?status=error&message=Missing%20SERPAPI_API_KEY%20in%20environment')
+    redirect(`${getJobsPath(newsletterId)}?status=error&message=Missing%20SERPAPI_API_KEY%20in%20environment`)
   }
 
   const jobs: SerpJobResult[] = []
@@ -170,12 +182,12 @@ export async function importGoogleJobs(formData: FormData) {
       })
 
       if (!response.ok) {
-        redirect(`/admin/jobs?status=error&message=${encodeURIComponent(`SerpAPI request failed (${response.status})`)}`)
+        redirect(`${getJobsPath(newsletterId)}?status=error&message=${encodeURIComponent(`SerpAPI request failed (${response.status})`)}`)
       }
 
       payload = (await response.json()) as SerpJobsResponse
     } catch {
-      redirect('/admin/jobs?status=error&message=Failed%20to%20fetch%20from%20SerpAPI')
+      redirect(`${getJobsPath(newsletterId)}?status=error&message=Failed%20to%20fetch%20from%20SerpAPI`)
     }
 
     const pageJobs = Array.isArray(payload.jobs_results) ? payload.jobs_results : []
@@ -190,8 +202,8 @@ export async function importGoogleJobs(formData: FormData) {
   const selectedJobs = jobs.slice(0, resultCount)
 
   if (!selectedJobs.length) {
-    revalidatePath('/admin/jobs')
-    redirect('/admin/jobs?status=success&imported=0')
+    revalidatePath(getJobsPath(newsletterId))
+    redirect(`${getJobsPath(newsletterId)}?status=success&imported=0`)
   }
 
   const rows = selectedJobs
@@ -210,8 +222,8 @@ export async function importGoogleJobs(formData: FormData) {
     .filter((job) => Boolean(job.job_id))
 
   if (!rows.length) {
-    revalidatePath('/admin/jobs')
-    redirect('/admin/jobs?status=success&imported=0')
+    revalidatePath(getJobsPath(newsletterId))
+    redirect(`${getJobsPath(newsletterId)}?status=success&imported=0`)
   }
 
   const supabase = await createClient()
@@ -221,11 +233,57 @@ export async function importGoogleJobs(formData: FormData) {
     .select('id')
 
   if (error) {
-    redirect('/admin/jobs?status=error&message=Failed%20to%20save%20job%20postings')
+    redirect(`${getJobsPath(newsletterId)}?status=error&message=Failed%20to%20save%20job%20postings`)
   }
 
   const importedCount = insertedRows?.length || 0
 
-  revalidatePath('/admin/jobs')
-  redirect(`/admin/jobs?status=success&imported=${importedCount}`)
+  revalidatePath(getJobsPath(newsletterId))
+  redirect(`${getJobsPath(newsletterId)}?status=success&imported=${importedCount}`)
+}
+
+export async function addJobToNewsletter(jobId: number, newsletterId: number) {
+  if (!Number.isInteger(jobId) || jobId <= 0) {
+    throw new Error('Invalid job id')
+  }
+
+  if (!Number.isInteger(newsletterId) || newsletterId <= 0) {
+    throw new Error('Invalid newsletter id')
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('job_postings')
+    .update({ newsletter_id: newsletterId })
+    .eq('id', jobId)
+
+  if (error) {
+    throw new Error('Failed to add job to newsletter')
+  }
+
+  revalidatePath(getJobsPath(newsletterId))
+}
+
+export async function removeJobFromNewsletter(jobId: number, newsletterId: number) {
+  if (!Number.isInteger(jobId) || jobId <= 0) {
+    throw new Error('Invalid job id')
+  }
+
+  if (!Number.isInteger(newsletterId) || newsletterId <= 0) {
+    throw new Error('Invalid newsletter id')
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('job_postings')
+    .update({ newsletter_id: null })
+    .eq('id', jobId)
+    .eq('newsletter_id', newsletterId)
+
+  if (error) {
+    throw new Error('Failed to remove job from newsletter')
+  }
+
+  revalidatePath(getJobsPath(newsletterId))
+  revalidatePath(getDesignPath(newsletterId))
 }

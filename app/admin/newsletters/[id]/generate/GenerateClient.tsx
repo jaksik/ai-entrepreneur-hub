@@ -39,6 +39,10 @@ function getArticleDisplayDescription(article: BeehiivArticle) {
   return article.ai_description?.trim() || article.description?.trim() || ''
 }
 
+function shouldRenderDescription(article: BeehiivArticle) {
+  return normalizeCategory(article.newsletter_category) === 'feature'
+}
+
 function normalizeCategory(value: string | null | undefined) {
   const normalized = value?.trim().toLowerCase()
   if (!normalized) return 'uncategorized'
@@ -100,7 +104,9 @@ function buildBeehiivHtml(
     : ''
 
   const coverArticleMarkup = coverArticle
-    ? `<p><a href="${escapeHtml(toSafeUrl(coverArticle.url))}">${escapeHtml(getArticleDisplayTitle(coverArticle))}</a></p><p>${escapeHtml(getArticleDisplayDescription(coverArticle))}</p>`
+    ? `<p><a href="${escapeHtml(toSafeUrl(coverArticle.url))}">${escapeHtml(getArticleDisplayTitle(coverArticle))}</a></p>${shouldRenderDescription(coverArticle) && getArticleDisplayDescription(coverArticle)
+      ? `<p>${escapeHtml(getArticleDisplayDescription(coverArticle))}</p>`
+      : ''}`
     : ''
 
   const placeholderTableRowsMarkup = NEWSLETTER_MARKET_TABLE_PLACEHOLDER_ROWS
@@ -134,7 +140,7 @@ function buildBeehiivHtml(
           const title = getArticleDisplayTitle(article)
           const description = getArticleDisplayDescription(article)
           const url = toSafeUrl(article.url)
-          return `<p><a href="${escapeHtml(url)}">${escapeHtml(title)}</a></p><p>${escapeHtml(description)}</p>`
+          return `<p><a href="${escapeHtml(url)}">${escapeHtml(title)}</a></p>${key === 'feature' && description ? `<p>${escapeHtml(description)}</p>` : ''}`
         })
         .join('')
 
@@ -143,10 +149,10 @@ function buildBeehiivHtml(
       }
 
       if (key === 'economy') {
-        return `<h2>${escapeHtml(categoryLabel)}</h2>${placeholderTable}${articleMarkup}`
+        return `<h2 style="text-align:center;">${escapeHtml(categoryLabel)}</h2>${placeholderTable}${articleMarkup}`
       }
 
-      return `<h2>${escapeHtml(categoryLabel)}</h2>${articleMarkup}`
+      return `<h2 style="text-align:center;">${escapeHtml(categoryLabel)}</h2>${articleMarkup}`
     })
     .join('')
 
@@ -160,7 +166,9 @@ function buildPlainText(
 ) {
   const safeCoverImageUrl = toSafeImageUrl(coverImageUrl)
   const coverArticleSection = coverArticle
-    ? `- ${getArticleDisplayTitle(coverArticle)} (${toSafeUrl(coverArticle.url)})\n  ${getArticleDisplayDescription(coverArticle)}`
+    ? `- ${getArticleDisplayTitle(coverArticle)} (${toSafeUrl(coverArticle.url)})${shouldRenderDescription(coverArticle) && getArticleDisplayDescription(coverArticle)
+      ? `\n  ${getArticleDisplayDescription(coverArticle)}`
+      : ''}`
     : ''
   const articleSections = NEWSLETTER_CATEGORY_ORDER
     .filter((key) => (grouped[key] || []).length > 0)
@@ -170,7 +178,7 @@ function buildPlainText(
         const title = getArticleDisplayTitle(article)
         const description = getArticleDisplayDescription(article)
         const url = toSafeUrl(article.url)
-        return `- ${title} (${url})${description ? `\n  ${description}` : ''}`
+        return `- ${title} (${url})${key === 'feature' && description ? `\n  ${description}` : ''}`
       })
 
       if (key === 'feature') {
@@ -340,7 +348,9 @@ export default function GenerateClient({ newsletterId }: { newsletterId: number 
                   {getArticleDisplayTitle(coverArticle)}
                 </a>
                 {getArticleDisplayDescription(coverArticle) ? (
-                  <p className="mt-1 type-caption text-(--color-text-secondary)">{getArticleDisplayDescription(coverArticle)}</p>
+                  shouldRenderDescription(coverArticle) ? (
+                    <p className="mt-1 type-caption text-(--color-text-secondary)">{getArticleDisplayDescription(coverArticle)}</p>
+                  ) : null
                 ) : null}
               </section>
             ) : null}
@@ -353,7 +363,7 @@ export default function GenerateClient({ newsletterId }: { newsletterId: number 
                 return (
                   <section key={categoryKey}>
                     {categoryKey !== 'feature' ? (
-                      <h2 className="mb-2 type-subtitle text-(--color-text-primary)">
+                      <h2 className="mb-2 type-subtitle text-center text-(--color-text-primary)">
                         {formatCategoryLabel(categoryKey)}
                       </h2>
                     ) : null}
@@ -397,7 +407,7 @@ export default function GenerateClient({ newsletterId }: { newsletterId: number 
                             >
                               {title}
                             </a>
-                            {description ? (
+                            {categoryKey === 'feature' && description ? (
                               <p className="mt-1 type-caption text-(--color-text-secondary)">{description}</p>
                             ) : null}
                           </div>

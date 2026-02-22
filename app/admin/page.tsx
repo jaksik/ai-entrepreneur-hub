@@ -1,5 +1,16 @@
 import { createClient } from '@/utils/supabase/server'
-import Link from 'next/link'
+import ColorDropdownTabs from './ColorDropdownTabs'
+
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}
+
+const LOG_LIMIT_OPTIONS = [10, 25, 50, 75, 100] as const
+
+function getSingleSearchParam(value: string | string[] | undefined) {
+  if (Array.isArray(value)) return value[0]
+  return value
+}
 
 function formatCreatedAt(value: string) {
   const parsed = new Date(value)
@@ -52,7 +63,14 @@ function getStatusTone(status: string | null) {
   }
 }
 
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }: PageProps) {
+  const resolvedSearchParams = await searchParams
+  const rawLogsLimit = getSingleSearchParam(resolvedSearchParams.logs_limit)
+  const parsedLogsLimit = Number(rawLogsLimit)
+  const logsLimit = LOG_LIMIT_OPTIONS.includes(parsedLogsLimit as typeof LOG_LIMIT_OPTIONS[number])
+    ? parsedLogsLimit
+    : 10
+
   const supabase = await createClient()
   const [{ count: toolsCount }, { count: articlesCount }, logsResult] = await Promise.all([
     supabase.from('tools').select('*', { count: 'exact', head: true }),
@@ -61,7 +79,7 @@ export default async function AdminPage() {
       .from('script_logs')
       .select('id, created_at, status, script_name, message')
       .order('created_at', { ascending: false })
-      .limit(100),
+      .limit(logsLimit),
   ])
 
   if (logsResult.error) {
@@ -72,8 +90,15 @@ export default async function AdminPage() {
 
   return (
     <div>
-      <h2 className="type-title mb-6 text-(--color-text-primary)">Admin</h2>
+      <h2 className="type-title mb-6 text-(--color-text-primary)">Admin - Press Buttons, Make Money</h2>
+      <div className="mt-8">
+        <h3 className="type-subtitle text-(--color-text-primary)">Welcome, Connor. Today is a good day. It's Wednesday, Feb 14th.</h3>
+      </div>
 
+
+      <ColorDropdownTabs />
+
+      {/* 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Link
           href="/admin/tools"
@@ -92,10 +117,33 @@ export default async function AdminPage() {
           <h3 className="type-title mt-1 text-(--color-text-primary)">Newsletter Articles</h3>
           <p className="type-body mt-2 text-(--color-text-secondary)">{articlesCount ?? 0} total in article database</p>
         </Link>
-      </div>
+      </div> */}
 
       <div className="mt-8">
         <h3 className="type-subtitle text-(--color-text-primary)">Execution Logs</h3>
+      </div>
+
+      <div className="mt-3 flex items-center justify-end">
+        <form className="flex items-center gap-2">
+          <label htmlFor="logs_limit" className="type-caption text-(--color-text-secondary)">Show</label>
+          <select
+            id="logs_limit"
+            name="logs_limit"
+            defaultValue={String(logsLimit)}
+            className="rounded-md border border-(--color-input-border) bg-(--color-input-bg) px-2 py-1.5 type-caption text-(--color-text-primary) focus:outline-none"
+          >
+            {LOG_LIMIT_OPTIONS.map((option) => (
+              <option key={option} value={String(option)}>{option}</option>
+            ))}
+          </select>
+          <span className="type-caption text-(--color-text-secondary)">logs</span>
+          <button
+            type="submit"
+            className="rounded-md border border-(--color-input-border) bg-(--color-input-bg) px-2 py-1.5 type-caption text-(--color-text-secondary) hover:text-(--color-text-primary)"
+          >
+            Apply
+          </button>
+        </form>
       </div>
 
       <div className="mt-3 overflow-hidden rounded-xl border border-(--color-card-border) bg-(--color-card-bg)">
