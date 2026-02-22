@@ -31,6 +31,7 @@ type SerpJobsResponse = {
 }
 
 const RESULT_COUNT_OPTIONS = [10, 20, 30, 40, 50] as const
+const DATE_POSTED_OPTIONS = ['today', '3days', 'week', 'month'] as const
 
 function getSerpApiKey() {
   return process.env.SERPAPI_API_KEY || process.env.SERP_API_KEY || process.env.NEXT_PUBLIC_SERPAPI_API_KEY || ''
@@ -38,6 +39,43 @@ function getSerpApiKey() {
 
 function parsePostedDate(value: string | undefined) {
   if (!value) return null
+
+  const normalized = value.trim().toLowerCase()
+  const now = new Date()
+
+  if (normalized === 'today' || normalized.includes('just posted')) {
+    return now.toISOString()
+  }
+
+  if (normalized === 'yesterday') {
+    const approximate = new Date(now)
+    approximate.setDate(approximate.getDate() - 1)
+    return approximate.toISOString()
+  }
+
+  const relativeMatch = normalized.match(/(\d+)\+?\s*(minute|minutes|min|mins|hour|hours|hr|hrs|day|days|week|weeks|month|months)\s+ago/)
+  if (relativeMatch) {
+    const amount = Number(relativeMatch[1])
+    const unit = relativeMatch[2]
+
+    if (!Number.isNaN(amount) && amount >= 0) {
+      const approximate = new Date(now)
+
+      if (unit.startsWith('min')) {
+        approximate.setMinutes(approximate.getMinutes() - amount)
+      } else if (unit.startsWith('h')) {
+        approximate.setHours(approximate.getHours() - amount)
+      } else if (unit.startsWith('day')) {
+        approximate.setDate(approximate.getDate() - amount)
+      } else if (unit.startsWith('week')) {
+        approximate.setDate(approximate.getDate() - (amount * 7))
+      } else if (unit.startsWith('month')) {
+        approximate.setDate(approximate.getDate() - (amount * 30))
+      }
+
+      return approximate.toISOString()
+    }
+  }
 
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) return null
@@ -69,10 +107,18 @@ function extractApplyLink(job: SerpJobResult) {
   return null
 }
 
+function normalizeLocation(value: string | undefined) {
+  if (!value) return null
+
+  const withoutParensSuffix = value.replace(/\s*\([^)]*\)\s*$/g, '').trim()
+  return withoutParensSuffix || null
+}
+
 export async function importGoogleJobs(formData: FormData) {
   const queryInput = formData.get('q')
   const locationInput = formData.get('location')
   const resultCountInput = formData.get('result_count')
+  const datePostedInput = formData.get('date_posted')
 
   const q = typeof queryInput === 'string' ? queryInput.trim() : ''
   const location = typeof locationInput === 'string' ? locationInput.trim() : ''
@@ -80,6 +126,10 @@ export async function importGoogleJobs(formData: FormData) {
   const resultCount = RESULT_COUNT_OPTIONS.includes(parsedResultCount as typeof RESULT_COUNT_OPTIONS[number])
     ? parsedResultCount
     : 10
+  const rawDatePosted = typeof datePostedInput === 'string' ? datePostedInput.trim() : ''
+  const datePosted = DATE_POSTED_OPTIONS.includes(rawDatePosted as typeof DATE_POSTED_OPTIONS[number])
+    ? rawDatePosted
+    : 'today'
   const pagesToFetch = Math.ceil(resultCount / 10)
 
   if (!q) {
@@ -104,6 +154,8 @@ export async function importGoogleJobs(formData: FormData) {
     if (location) {
       params.set('location', location)
     }
+
+    params.set('chips', `date_posted:${datePosted}`)
 
     if (nextPageToken) {
       params.set('next_page_token', nextPageToken)
@@ -148,7 +200,7 @@ export async function importGoogleJobs(formData: FormData) {
       newsletter_id: null,
       title: job.title || null,
       company: job.company_name || null,
-      location: job.location || null,
+      location: normalizeLocation(job.location),
       apply_link: extractApplyLink(job),
       remote: inferRemote(job),
       company_logo: job.thumbnail || null,

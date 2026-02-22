@@ -1,7 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { importGoogleJobs } from './actions'
 
-const QUERY_OPTIONS = ['Chief Technology Officer', 'AI Enablement', 'Automation'] as const
+const QUERY_OPTIONS = ['AI Enablement', 'AI Automation', 'AI Sales', 'AI Research', 'AI Content Strategist', 'AI Security'] as const
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
@@ -24,6 +24,20 @@ function formatDateTime(value: string | null) {
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZone: 'UTC',
+  }).format(parsed)
+}
+
+function formatDateOnly(value: string | null) {
+  if (!value) return '—'
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return '—'
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
     timeZone: 'UTC',
   }).format(parsed)
 }
@@ -51,7 +65,7 @@ export default async function AdminJobsPage({ searchParams }: PageProps) {
       .order('publish_date', { ascending: false, nullsFirst: false }),
     supabase
       .from('job_postings')
-      .select('id, created_at, job_id, newsletter_id, title, company, location, apply_link, remote, posted_date')
+      .select('id, created_at, newsletter_id, title, company, location, apply_link, remote, posted_date')
       .order('created_at', { ascending: false })
       .limit(200),
   ])
@@ -130,6 +144,20 @@ export default async function AdminJobsPage({ searchParams }: PageProps) {
                 <option value="50">50</option>
               </select>
             </div>
+
+            <div>
+              <label className="mb-1 block type-caption text-(--color-text-secondary)">Date Posted</label>
+              <select
+                name="date_posted"
+                defaultValue="today"
+                className="w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) px-3 py-2 type-body text-(--color-text-primary) focus:outline-none"
+              >
+                <option value="today">Today</option>
+                <option value="3days">3 Days</option>
+                <option value="week">Week</option>
+                <option value="month">Month</option>
+              </select>
+            </div>
           </div>
 
           <div className="flex justify-end pt-2">
@@ -148,7 +176,6 @@ export default async function AdminJobsPage({ searchParams }: PageProps) {
           <thead className="bg-(--color-bg-secondary)">
             <tr>
               <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Created</th>
-              <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Job ID</th>
               <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Newsletter</th>
               <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Title</th>
               <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Company</th>
@@ -166,9 +193,6 @@ export default async function AdminJobsPage({ searchParams }: PageProps) {
                     {formatDateTime(job.created_at)}
                   </td>
                   <td className="px-4 py-3 align-top whitespace-nowrap type-caption text-(--color-text-secondary)">
-                    {job.job_id || '—'}
-                  </td>
-                  <td className="px-4 py-3 align-top whitespace-nowrap type-caption text-(--color-text-secondary)">
                     {job.newsletter_id ? newsletterTitleById.get(job.newsletter_id) || `Newsletter #${job.newsletter_id}` : '—'}
                   </td>
                   <td className="px-4 py-3 align-top max-w-md type-body text-(--color-text-primary)">{job.title || '—'}</td>
@@ -178,7 +202,7 @@ export default async function AdminJobsPage({ searchParams }: PageProps) {
                     {job.remote === null ? '—' : job.remote ? 'Yes' : 'No'}
                   </td>
                   <td className="px-4 py-3 align-top whitespace-nowrap type-caption text-(--color-text-secondary)">
-                    {formatDateTime(job.posted_date)}
+                    {formatDateOnly(job.posted_date)}
                   </td>
                   <td className="px-4 py-3 align-top whitespace-nowrap type-caption">
                     {job.apply_link ? (
@@ -198,7 +222,7 @@ export default async function AdminJobsPage({ searchParams }: PageProps) {
               ))
             ) : (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center type-body text-(--color-text-secondary)">
+                <td colSpan={8} className="px-4 py-8 text-center type-body text-(--color-text-secondary)">
                   No job postings yet.
                 </td>
               </tr>
