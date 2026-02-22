@@ -15,19 +15,17 @@ export async function addArticleToNewsletter(articleId: number, newsletterId: nu
     throw new Error('Invalid newsletter id')
   }
 
-  const { data: existingAssignment, error: existingAssignmentError } = await db
-    .from('newsletter_articles')
+  const { data: article, error: articleError } = await db
+    .from('articles')
     .select('id, newsletter_id')
-    .eq('newsletter_id', newsletterId)
-    .eq('article_id', articleId)
-    .limit(1)
-    .maybeSingle()
+    .eq('id', articleId)
+    .single()
 
-  if (existingAssignmentError) {
-    throw new Error(`Failed to check existing curation: ${existingAssignmentError.message}`)
+  if (articleError || !article) {
+    throw new Error('Failed to fetch article')
   }
 
-  if (existingAssignment) {
+  if (article.newsletter_id === newsletterId) {
     revalidatePath('/admin/newsletters')
     revalidatePath(`/admin/newsletters/${newsletterId}/articles`)
     revalidatePath(`/admin/newsletters/${newsletterId}/curate`)
@@ -36,37 +34,67 @@ export async function addArticleToNewsletter(articleId: number, newsletterId: nu
     return
   }
 
-  const { data: article, error: articleError } = await db
-    .from('articles')
-    .select('id, title, description, url, publisher, published_at')
-    .eq('id', articleId)
-    .single()
+  const previousNewsletterId = article.newsletter_id
 
-  if (articleError || !article) {
-    throw new Error('Failed to fetch article')
+  const { error: updateError } = await db
+    .from('articles')
+    .update({ newsletter_id: newsletterId })
+    .eq('id', articleId)
+
+  if (updateError) {
+    throw new Error(`Failed to add article to newsletter: ${updateError.message}`)
   }
 
-  const { error: insertError } = await db.from('newsletter_articles').insert({
-    newsletter_id: newsletterId,
-    article_id: article.id,
-    title: article.title,
-    description: article.description,
-    url: article.url,
-    publisher: article.publisher,
-    published_at: article.published_at,
-  })
+  revalidatePath('/admin/newsletters')
+  if (typeof previousNewsletterId === 'number' && previousNewsletterId > 0) {
+    revalidatePath(`/admin/newsletters/${previousNewsletterId}/articles`)
+    revalidatePath(`/admin/newsletters/${previousNewsletterId}/curate`)
+    revalidatePath(`/admin/newsletters/${previousNewsletterId}/design`)
+    revalidatePath(`/admin/newsletters/${previousNewsletterId}/generate`)
+  }
+  revalidatePath(`/admin/newsletters/${newsletterId}/articles`)
+  revalidatePath(`/admin/newsletters/${newsletterId}/curate`)
+  revalidatePath(`/admin/newsletters/${newsletterId}/design`)
+  revalidatePath(`/admin/newsletters/${newsletterId}/generate`)
+}
 
-  if (insertError) {
-    if (insertError.code === '23505') {
-      revalidatePath('/admin/newsletters')
-      revalidatePath(`/admin/newsletters/${newsletterId}/articles`)
-      revalidatePath(`/admin/newsletters/${newsletterId}/curate`)
-      revalidatePath(`/admin/newsletters/${newsletterId}/design`)
-      revalidatePath(`/admin/newsletters/${newsletterId}/generate`)
-      return
-    }
+export async function removeArticleFromNewsletter(articleId: number) {
+  const supabase = await createClient()
+  const db = supabase
 
-    throw new Error(`Failed to add article to newsletter: ${insertError.message}`)
+  const { data: assignment, error: assignmentError } = await db
+    .from('articles')
+    .select('newsletter_id')
+    .eq('id', articleId)
+    .maybeSingle()
+
+  if (assignmentError) {
+    throw new Error('Failed to find article')
+  }
+
+  if (!assignment?.newsletter_id) {
+    return
+  }
+
+  const newsletterId = assignment.newsletter_id
+
+  const { error } = await db
+    .from('articles')
+    .update({ newsletter_id: null })
+    .eq('id', articleId)
+
+  if (error) {
+    throw new Error('Failed to remove article association from newsletter')
+  }
+
+  const { error: coverArticleError } = await db
+    .from('newsletters')
+    .update({ cover_article: null })
+    .eq('id', newsletterId)
+    .eq('cover_article', articleId)
+
+  if (coverArticleError) {
+    throw new Error('Failed to update newsletter cover article')
   }
 
   revalidatePath('/admin/newsletters')
@@ -74,38 +102,4 @@ export async function addArticleToNewsletter(articleId: number, newsletterId: nu
   revalidatePath(`/admin/newsletters/${newsletterId}/curate`)
   revalidatePath(`/admin/newsletters/${newsletterId}/design`)
   revalidatePath(`/admin/newsletters/${newsletterId}/generate`)
-}
-
-export async function removeArticleFromNewsletter(newsletterArticleId: number) {
-  const supabase = await createClient()
-  const db = supabase
-
-  const { data: assignment, error: assignmentError } = await db
-    .from('newsletter_articles')
-    .select('newsletter_id')
-    .eq('id', newsletterArticleId)
-    .maybeSingle()
-
-  if (assignmentError) {
-    throw new Error('Failed to find newsletter article')
-  }
-
-  const { error } = await db
-    .from('newsletter_articles')
-    .delete()
-    .eq('id', newsletterArticleId)
-
-  if (error) {
-    throw new Error('Failed to remove article from newsletter')
-  }
-
-  revalidatePath('/admin/newsletters')
-
-  const newsletterId = assignment?.newsletter_id
-  if (typeof newsletterId === 'number' && newsletterId > 0) {
-    revalidatePath(`/admin/newsletters/${newsletterId}/articles`)
-    revalidatePath(`/admin/newsletters/${newsletterId}/curate`)
-    revalidatePath(`/admin/newsletters/${newsletterId}/design`)
-    revalidatePath(`/admin/newsletters/${newsletterId}/generate`)
-  }
 }

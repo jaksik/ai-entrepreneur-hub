@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/server'
-import CreateNewsletterModal from './CreateNewsletterModal'
 
 function formatPublishedAt(value: string | null) {
   if (!value) return 'Not set'
@@ -30,9 +29,8 @@ export default async function NewslettersPage() {
 
   return (
     <section className="w-full bg-(--color-bg-primary)">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6">
         <h2 className="type-title text-(--color-text-primary)">Newsletters</h2>
-        <CreateNewsletterModal />
       </div>
 
       <div className="overflow-hidden rounded-xl border border-(--color-card-border) bg-(--color-card-bg)">
@@ -53,7 +51,7 @@ export default async function NewslettersPage() {
                 >
                   <td className="px-4 py-3 type-body text-(--color-text-primary)">
                     <Link
-                      href={`/admin/newsletters/${newsletter.id}/curate`}
+                      href={`/admin/newsletters/${newsletter.id}/design`}
                       className="hover:text-accent-primary hover:underline"
                     >
                       {newsletter.title || `Newsletter #${newsletter.id}`}

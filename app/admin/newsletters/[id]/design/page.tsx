@@ -13,6 +13,18 @@ type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
+type CuratedArticleRow = {
+  id: number
+  title: string | null
+  description: string | null
+  url: string | null
+  ai_title: string | null
+  ai_description: string | null
+  published_at: string | null
+  newsletter_category: string | null
+  publisher: string | null
+}
+
 const CATEGORY_SORT_ORDER = ['feature', 'economy', 'brief', 'research'] as const
 
 function getSingleSearchParam(value: string | string[] | undefined) {
@@ -148,18 +160,25 @@ export default async function NewsletterDesignPage({ params, searchParams }: Pag
     throw new Error('Failed to fetch newsletter images')
   }
 
-  const { data: curatedArticles, error: articlesError } = await db
-    .from('newsletter_articles')
-    .select('id, newsletter_id, article_id, title, description, url, ai_title, ai_description, published_at, newsletter_category, publisher')
+  let curatedArticles: CuratedArticleRow[] = []
+
+  let articlesError: { message: string } | null = null
+
+  const primaryArticlesResult = await db
+    .from('articles')
+    .select('id, title, description, url, ai_title:title_snippet, ai_description:description_snippet, published_at, newsletter_category:category, publisher')
     .eq('newsletter_id', newsletterId)
     .order('id', { ascending: false })
 
+  curatedArticles = (primaryArticlesResult.data as CuratedArticleRow[] | null) || []
+  articlesError = primaryArticlesResult.error ? { message: primaryArticlesResult.error.message } : null
+
   if (articlesError) {
-    throw new Error('Failed to fetch newsletter articles')
+    throw new Error(`Failed to fetch newsletter articles: ${articlesError.message}`)
   }
 
   const sortedCuratedArticles = sortByCategories
-    ? [...(curatedArticles || [])].sort((left, right) => {
+    ? [...curatedArticles].sort((left, right) => {
         const leftCategory = normalizeCategory(left.newsletter_category)
         const rightCategory = normalizeCategory(right.newsletter_category)
 
@@ -172,7 +191,7 @@ export default async function NewsletterDesignPage({ params, searchParams }: Pag
         if (leftRank !== rightRank) return leftRank - rightRank
         return right.id - left.id
       })
-    : curatedArticles || []
+    : curatedArticles
 
   const selectedStatus = selectedNewsletter.status?.trim().toLowerCase() || 'draft'
   const statusTone = getStatusTone(selectedStatus)
@@ -405,7 +424,7 @@ export default async function NewsletterDesignPage({ params, searchParams }: Pag
                             type="submit"
                             className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-(--color-card-border) text-(--color-text-secondary) transition hover:bg-red-500/10 hover:text-red-500"
                             aria-label="Delete article from newsletter"
-                            title="Delete article"
+                            title="Remove from newsletter"
                           >
                             <svg
                               xmlns="http://www.w3.org/2000/svg"

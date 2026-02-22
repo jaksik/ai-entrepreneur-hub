@@ -24,7 +24,8 @@ function formatPublishDate(value: string | null) {
 }
 
 const navItems = [
-  { href: '/admin/tools', label: 'Tools' }
+  { href: '/admin/tools', label: 'Tools' },
+  { href: '/admin/jobs', label: 'Jobs' },
 ]
 
 export default function AdminNavLinks({ newsletters }: { newsletters: NewsletterOption[] }) {
@@ -105,30 +106,32 @@ export default function AdminNavLinks({ newsletters }: { newsletters: Newsletter
             Newsletters
           </Link>
 
-          <Link
-            href="/admin/newsletters/create"
-            className={`type-caption px-3 py-1.5 rounded-md border transition ${isActive('/admin/newsletters/create')
-                ? 'text-(--color-text-primary) border-(--color-card-border) bg-(--color-card-bg)'
-                : 'text-(--color-text-primary) border-transparent hover:bg-(--color-card-bg)'
-              }`}
-            aria-current={isActive('/admin/newsletters/create') ? 'page' : undefined}
-          >
-            Create
-          </Link>
+          <div className="inline-flex items-center overflow-hidden rounded-lg border border-(--color-input-border) bg-(--color-input-bg)">
+            <Link
+              href="/admin/newsletters/create"
+              className="inline-flex h-9 w-9 items-center justify-center text-xl font-bold leading-none text-accent-primary hover:bg-(--color-bg-secondary) hover:text-accent-hover"
+              aria-label="Create newsletter"
+              title="Create newsletter"
+            >
+              +
+            </Link>
 
-          <select
-            aria-label="Select Newsletter"
-            value={selectedNewsletterId}
-            onChange={(event) => handleNewsletterChange(event.target.value)}
-            className="type-caption min-w-52 rounded-md border border-(--color-input-border) bg-(--color-input-bg) px-3 py-1.5 text-(--color-text-primary) focus:outline-none"
-          >
-            <option value="">Select a newsletter</option>
-            {newsletters.map((newsletter) => (
-              <option key={newsletter.id} value={String(newsletter.id)}>
-                {formatPublishDate(newsletter.publish_date)}
-              </option>
-            ))}
-          </select>
+            <span className="h-6 w-px bg-(--color-input-border)" aria-hidden="true" />
+
+            <select
+              aria-label="Select Newsletter"
+              value={selectedNewsletterId}
+              onChange={(event) => handleNewsletterChange(event.target.value)}
+              className="type-caption min-w-56 bg-transparent pl-3 pr-8 py-1.5 text-(--color-text-primary) focus:outline-none"
+            >
+              <option value="">Select a newsletter</option>
+              {newsletters.map((newsletter) => (
+                <option key={newsletter.id} value={String(newsletter.id)}>
+                  {formatPublishDate(newsletter.publish_date)}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {newsletterSectionItems.map((item) => (
             <Link

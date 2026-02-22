@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState, useEffect } from 'react'
+import { useActionState, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createNewsletter } from '../actions'
 
@@ -11,8 +11,24 @@ type CreateNewsletterState = {
   error?: string
 }
 
+function toLocalDateTimeValue(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+function adjustDateByDays(value: string, amount: number) {
+  const parsed = new Date(`${value}T00:01:00`)
+  const baseDate = Number.isNaN(parsed.getTime()) ? new Date() : parsed
+  baseDate.setDate(baseDate.getDate() + amount)
+  return toLocalDateTimeValue(baseDate)
+}
+
 export default function CreateNewsletterPage() {
   const router = useRouter()
+  const [publishDateValue, setPublishDateValue] = useState(() => toLocalDateTimeValue(new Date()))
 
   const [state, formAction, isPending] = useActionState(
     async (_prevState: CreateNewsletterState, formData: FormData): Promise<CreateNewsletterState> => {
@@ -67,11 +83,38 @@ export default function CreateNewsletterPage() {
 
           <div>
             <label className="mb-1 block type-caption text-(--color-text-secondary)">Publish Date</label>
-            <input
-              type="datetime-local"
-              name="publish_date"
-              className="w-full rounded-md border border-(--color-input-border) bg-(--color-input-bg) px-3 py-2 type-body text-(--color-text-primary) focus:outline-none"
-            />
+            <div className="flex items-stretch gap-2">
+              <div className="flex-1 rounded-md border border-(--color-input-border) bg-(--color-input-bg)">
+                <input
+                  type="date"
+                  name="publish_date"
+                  value={publishDateValue}
+                  onChange={(event) => setPublishDateValue(event.target.value)}
+                  className="w-full bg-transparent px-3 py-2 type-body text-(--color-text-primary) focus:outline-none"
+                />
+              </div>
+
+              <div className="flex w-12 flex-col overflow-hidden rounded-md border border-(--color-input-border) bg-(--color-bg-secondary)">
+                <button
+                  type="button"
+                  onClick={() => setPublishDateValue((current) => adjustDateByDays(current, 1))}
+                  className="flex-1 border-b border-(--color-input-border) text-lg font-bold leading-none text-(--color-text-primary) hover:bg-(--color-card-bg)"
+                  aria-label="Increase publish date by one day"
+                  title="Increase by 1 day"
+                >
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPublishDateValue((current) => adjustDateByDays(current, -1))}
+                  className="flex-1 text-lg font-bold leading-none text-(--color-text-primary) hover:bg-(--color-card-bg)"
+                  aria-label="Decrease publish date by one day"
+                  title="Decrease by 1 day"
+                >
+                  ▼
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
