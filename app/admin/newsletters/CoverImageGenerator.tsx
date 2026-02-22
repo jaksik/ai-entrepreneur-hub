@@ -334,15 +334,15 @@ export default function CoverImageGenerator({
   const defaultModelKey = getDefaultModelKey()
 
   return (
-    <details className="rounded-lg border border-(--color-card-border) bg-(--color-card-bg)">
-      <summary className="cursor-pointer select-none px-3 py-2 type-caption text-(--color-text-primary)">
-        Cover Image
+    <details className="group overflow-hidden rounded-xl border border-(--color-card-border) bg-(--color-card-bg)">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-(--color-bg-secondary) px-4 py-3 type-caption font-medium text-(--color-text-primary) marker:content-none">
+        <span>Cover Image</span>
+        <span className="text-xs text-(--color-text-secondary) transition-transform group-open:rotate-180" aria-hidden>▾</span>
       </summary>
 
       <div className="space-y-4 border-t border-(--color-card-border) p-3">
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-2 xl:items-start">
           <section className="rounded-lg border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
-            <p className="mb-3 type-caption text-(--color-text-secondary)">Generate a cover image</p>
 
             <form action={generateNewsletterCoverImage} className="grid grid-cols-1 gap-3">
               <input type="hidden" name="newsletter_id" value={String(newsletterId)} />
@@ -389,7 +389,7 @@ export default function CoverImageGenerator({
           </section>
 
           <section className="rounded-lg border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
-            <p className="mb-3 type-caption text-(--color-text-secondary)">Current cover</p>
+            <p className="mb-3 type-caption text-(--color-text-secondary)">Current cover image:</p>
             {coverImageUrl ? (
               <Image
                 src={coverImageUrl}
@@ -408,7 +408,6 @@ export default function CoverImageGenerator({
         </div>
 
         <div className="space-y-2">
-          <p className="type-caption text-(--color-text-secondary)">All generated images</p>
           {generatedImages.length ? (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3 xl:grid-cols-4">
             {generatedImages.map((image) => {
