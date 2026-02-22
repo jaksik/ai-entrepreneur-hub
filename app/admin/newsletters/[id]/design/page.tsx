@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/utils/supabase/server'
 import { setNewsletterCoverArticle, updateNewsletterDetails } from '../../actions'
 import { removeArticleFromNewsletter } from '../curate/actions'
+import Link from 'next/link'
 import CategorySelect from '../../CategorySelect'
 import CategoryCountRow from '../../CategoryCountRow'
 import CoverImageGenerator from '../../CoverImageGenerator'
@@ -9,6 +10,14 @@ import ScheduledDateEditor from './ScheduledDateEditor'
 
 type PageProps = {
   params: Promise<{ id: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}
+
+const CATEGORY_SORT_ORDER = ['feature', 'economy', 'brief', 'research'] as const
+
+function getSingleSearchParam(value: string | string[] | undefined) {
+  if (Array.isArray(value)) return value[0]
+  return value
 }
 
 function formatPublishedAt(value: string | null) {
@@ -99,9 +108,12 @@ function getCategoryTone(category: string) {
   }
 }
 
-export default async function NewsletterDesignPage({ params }: PageProps) {
+export default async function NewsletterDesignPage({ params, searchParams }: PageProps) {
   const { id } = await params
+  const resolvedSearchParams = await searchParams
   const newsletterId = Number(id)
+  const sortMode = getSingleSearchParam(resolvedSearchParams.sort)
+  const sortByCategories = sortMode === 'categories'
 
   if (!newsletterId || Number.isNaN(newsletterId)) {
     notFound()
@@ -145,6 +157,22 @@ export default async function NewsletterDesignPage({ params }: PageProps) {
   if (articlesError) {
     throw new Error('Failed to fetch newsletter articles')
   }
+
+  const sortedCuratedArticles = sortByCategories
+    ? [...(curatedArticles || [])].sort((left, right) => {
+        const leftCategory = normalizeCategory(left.newsletter_category)
+        const rightCategory = normalizeCategory(right.newsletter_category)
+
+        const leftIndex = CATEGORY_SORT_ORDER.indexOf(leftCategory as typeof CATEGORY_SORT_ORDER[number])
+        const rightIndex = CATEGORY_SORT_ORDER.indexOf(rightCategory as typeof CATEGORY_SORT_ORDER[number])
+
+        const leftRank = leftIndex === -1 ? CATEGORY_SORT_ORDER.length : leftIndex
+        const rightRank = rightIndex === -1 ? CATEGORY_SORT_ORDER.length : rightIndex
+
+        if (leftRank !== rightRank) return leftRank - rightRank
+        return right.id - left.id
+      })
+    : curatedArticles || []
 
   const selectedStatus = selectedNewsletter.status?.trim().toLowerCase() || 'draft'
   const statusTone = getStatusTone(selectedStatus)
@@ -221,10 +249,11 @@ export default async function NewsletterDesignPage({ params }: PageProps) {
               </div>
             </div>
 
-            <div className="mt-4">
-              <details className="rounded-lg border border-(--color-card-border) bg-(--color-card-bg)">
-                <summary className="cursor-pointer select-none px-3 py-2 type-caption text-(--color-text-primary)">
-                  Newsletter Details
+            <div className="mt-4 space-y-3">
+              <details className="group overflow-hidden rounded-xl border border-(--color-card-border) bg-(--color-card-bg)">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-(--color-bg-secondary) px-4 py-3 type-caption font-medium text-(--color-text-primary) marker:content-none">
+                  <span>Newsletter Details</span>
+                  <span className="text-xs text-(--color-text-secondary) transition-transform group-open:rotate-180" aria-hidden>▾</span>
                 </summary>
                 <div className="border-t border-(--color-card-border) p-3">
                   <div className="rounded-lg border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
@@ -275,14 +304,27 @@ export default async function NewsletterDesignPage({ params }: PageProps) {
                 generatedImages={newsletterImages || []}
               />
 
-              <details className="rounded-lg border border-(--color-card-border) bg-(--color-card-bg)">
-                <summary className="cursor-pointer select-none px-3 py-2 type-caption text-(--color-text-primary)">
-                  Newsletter Articles
+              <details className="group overflow-hidden rounded-xl border border-(--color-card-border) bg-(--color-card-bg)">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-(--color-bg-secondary) px-4 py-3 type-caption font-medium text-(--color-text-primary) marker:content-none">
+                  <span>Newsletter Articles</span>
+                  <span className="text-xs text-(--color-text-secondary) transition-transform group-open:rotate-180" aria-hidden>▾</span>
                 </summary>
 
                 <div className="space-y-2 border-t border-(--color-card-border) p-3 md:p-4">
-                  {curatedArticles?.length ? (
-                    curatedArticles.map((article: {
+                  <div className="mb-2 flex justify-end">
+                    <Link
+                      href={`/admin/newsletters/${newsletterId}/design?sort=categories`}
+                      className={`inline-flex items-center justify-center rounded-md border px-3 py-1.5 type-caption font-medium transition ${sortByCategories
+                        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300'
+                        : 'border-(--color-card-border) text-(--color-text-primary) hover:bg-(--color-bg-secondary)'
+                        }`}
+                    >
+                      Sort by Categories
+                    </Link>
+                  </div>
+
+                  {sortedCuratedArticles.length ? (
+                    sortedCuratedArticles.map((article: {
                     id: number
                     title: string | null
                     description: string | null
@@ -392,6 +434,28 @@ export default async function NewsletterDesignPage({ params }: PageProps) {
                       No curated articles found for this newsletter.
                     </p>
                   )}
+                </div>
+              </details>
+
+              <details className="group overflow-hidden rounded-xl border border-(--color-card-border) bg-(--color-card-bg)">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-(--color-bg-secondary) px-4 py-3 type-caption font-medium text-(--color-text-primary) marker:content-none">
+                  <span>Economic Data</span>
+                  <span className="text-xs text-(--color-text-secondary) transition-transform group-open:rotate-180" aria-hidden>▾</span>
+                </summary>
+
+                <div className="border-t border-(--color-card-border) p-4">
+                  <p className="type-caption text-(--color-text-secondary)">No economic data content yet.</p>
+                </div>
+              </details>
+
+              <details className="group overflow-hidden rounded-xl border border-(--color-card-border) bg-(--color-card-bg)">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-(--color-bg-secondary) px-4 py-3 type-caption font-medium text-(--color-text-primary) marker:content-none">
+                  <span>Job Postings</span>
+                  <span className="text-xs text-(--color-text-secondary) transition-transform group-open:rotate-180" aria-hidden>▾</span>
+                </summary>
+
+                <div className="border-t border-(--color-card-border) p-4">
+                  <p className="type-caption text-(--color-text-secondary)">No job posting content yet.</p>
                 </div>
               </details>
             </div>
