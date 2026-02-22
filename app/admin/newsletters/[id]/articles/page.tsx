@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { addArticleToNewsletter } from '../curate/actions'
 import CategoryCountRow from '../../CategoryCountRow'
 import ArticleCategorySelect from './ArticleCategorySelect'
+import LimitSelect from './LimitSelect'
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -16,11 +17,12 @@ type ArticleRow = {
   title_snippets: string | null
   source: string | null
   publisher: string | null
-  category: string | null
+  newsletter_category: string | null
   created_at: string
 }
 
 const SORTABLE_COLUMNS = ['created_at', 'source', 'publisher', 'category', 'title_snippets', 'title'] as const
+const PAGE_SIZE_OPTIONS = [25, 50, 100, 200, 500] as const
 
 function getSingleSearchParam(value: string | string[] | undefined) {
   if (Array.isArray(value)) return value[0]
@@ -33,11 +35,12 @@ function formatCreatedAt(value: string | null) {
   const parsed = new Date(value)
   if (Number.isNaN(parsed.getTime())) return '—'
 
-  return parsed.toLocaleDateString('en-US', {
+  return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
-  })
+    timeZone: 'UTC',
+  }).format(parsed)
 }
 
 function getCategorySortValue(value: string | null | undefined) {
@@ -56,28 +59,45 @@ export default async function NewsletterArticlesPage({ params, searchParams }: P
   const resolvedSearchParams = await searchParams
   const rawSort = getSingleSearchParam(resolvedSearchParams.sort)
   const rawDir = getSingleSearchParam(resolvedSearchParams.dir)
+  const rawLimit = getSingleSearchParam(resolvedSearchParams.limit)
 
   const sortColumn = SORTABLE_COLUMNS.includes((rawSort || '') as typeof SORTABLE_COLUMNS[number])
     ? (rawSort as typeof SORTABLE_COLUMNS[number])
     : 'created_at'
   const sortDirection: 'asc' | 'desc' = rawDir === 'asc' ? 'asc' : 'desc'
+  const parsedLimit = Number(rawLimit)
+  const pageSize = PAGE_SIZE_OPTIONS.includes(parsedLimit as typeof PAGE_SIZE_OPTIONS[number])
+    ? (parsedLimit as typeof PAGE_SIZE_OPTIONS[number])
+    : 100
 
   const supabase = await createClient()
-  const primarySortColumn = sortColumn === 'title_snippets' ? 'title_snippets' : sortColumn
-  const fallbackSortColumn = sortColumn === 'title_snippets' ? 'title_snippet' : sortColumn
+  const primarySortColumn =
+    sortColumn === 'title_snippets'
+      ? 'title_snippet'
+      : sortColumn === 'category'
+        ? 'category'
+        : sortColumn
+  const fallbackSortColumn =
+    sortColumn === 'title_snippets'
+      ? 'title_snippet'
+      : sortColumn === 'category'
+        ? 'category'
+        : sortColumn
 
   const primaryQuery = supabase
     .from('articles')
-    .select('id, title, description, title_snippets, source, publisher, category, created_at')
+    .select('id, title, description, title_snippets:title_snippet, source, publisher, newsletter_category:category, created_at')
     .order(primarySortColumn, { ascending: sortDirection === 'asc' })
+    .limit(pageSize)
 
   let { data: articles, error } = await primaryQuery
 
   if (error) {
     const fallbackQuery = supabase
       .from('articles')
-      .select('id, title, description, title_snippets:title_snippet, source, publisher, category, created_at')
+      .select('id, title, description, title_snippets:title_snippet, source, publisher, newsletter_category:category, created_at')
       .order(fallbackSortColumn, { ascending: sortDirection === 'asc' })
+      .limit(pageSize)
 
     const fallbackResult = await fallbackQuery
     articles = fallbackResult.data as unknown as ArticleRow[] | null
@@ -90,8 +110,8 @@ export default async function NewsletterArticlesPage({ params, searchParams }: P
 
   if (sortColumn === 'category' && articles?.length) {
     articles = [...articles].sort((left, right) => {
-      const leftValue = getCategorySortValue(left.category)
-      const rightValue = getCategorySortValue(right.category)
+      const leftValue = getCategorySortValue(left.newsletter_category)
+      const rightValue = getCategorySortValue(right.newsletter_category)
 
       if (leftValue === rightValue) return 0
 
@@ -101,8 +121,8 @@ export default async function NewsletterArticlesPage({ params, searchParams }: P
   }
 
   const { data: curatedArticles, error: curatedError } = await supabase
-    .from('newsletter_articles')
-    .select('newsletter_category')
+    .from('articles')
+    .select('newsletter_category:category')
     .eq('newsletter_id', newsletterId)
 
   if (curatedError) {
@@ -114,6 +134,7 @@ export default async function NewsletterArticlesPage({ params, searchParams }: P
     const params = new URLSearchParams()
     params.set('sort', column)
     params.set('dir', nextDir)
+    params.set('limit', String(pageSize))
     return `/admin/newsletters/${newsletterId}/articles?${params.toString()}`
   }
 
@@ -128,7 +149,21 @@ export default async function NewsletterArticlesPage({ params, searchParams }: P
         <h2 className="type-title text-(--color-text-primary)">Article Database</h2>
       </div>
 
-      <div className="mb-3 flex justify-end">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <form className="flex items-center gap-1.5">
+          <input type="hidden" name="sort" value={sortColumn} />
+          <input type="hidden" name="dir" value={sortDirection} />
+          <label htmlFor="limit" className="type-caption text-(--color-text-secondary)">Show</label>
+          <LimitSelect
+            id="limit"
+            name="limit"
+            defaultValue={String(pageSize)}
+            options={PAGE_SIZE_OPTIONS}
+            className="w-18 rounded-md border border-(--color-input-border) bg-(--color-input-bg) px-2 py-1.5 type-caption text-(--color-text-primary) focus:outline-none"
+          />
+          <span className="type-caption text-(--color-text-secondary)">articles</span>
+        </form>
+
         <CategoryCountRow
           categories={(curatedArticles || []).map((article: { newsletter_category: string | null }) => article.newsletter_category)}
           align="right"
@@ -173,7 +208,7 @@ export default async function NewsletterArticlesPage({ params, searchParams }: P
               <th className="px-4 py-2.5 text-right type-caption text-(--color-text-secondary) uppercase tracking-wide">edit</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-(--color-card-border) bg-(--color-card-bg)">
+          <tbody suppressHydrationWarning className="divide-y divide-(--color-card-border) bg-(--color-card-bg)">
             {articles?.length ? (
               articles.map((article) => (
                 <tr key={article.id}>
@@ -186,7 +221,7 @@ export default async function NewsletterArticlesPage({ params, searchParams }: P
                       <ArticleCategorySelect
                         articleId={article.id}
                         newsletterId={newsletterId}
-                        currentCategory={article.category}
+                        currentCategory={article.newsletter_category}
                       />
                       <p className="mt-3 truncate type-body text-sm text-(--color-text-secondary)">{article.publisher || '—'}</p>
                     </div>

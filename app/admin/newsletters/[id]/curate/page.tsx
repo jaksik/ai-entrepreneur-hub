@@ -9,6 +9,18 @@ type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
+type CuratedArticleRow = {
+  id: number
+  title: string | null
+  description: string | null
+  url: string | null
+  publisher: string | null
+  published_at: string | null
+  ai_title: string | null
+  ai_description: string | null
+  newsletter_category: string | null
+}
+
 const ARTICLE_DB_CATEGORIES = ['all', 'feature', 'brief', 'economy', 'research', 'uncategorized'] as const
 const ARTICLE_DB_SORT_OPTIONS = ['newest', 'oldest', 'published_newest', 'published_oldest', 'title_az', 'title_za'] as const
 
@@ -114,48 +126,27 @@ export default async function NewsletterCuratePage({ params, searchParams }: Pag
     notFound()
   }
 
-  const { data: curatedArticles, error: curatedError } = await db
-    .from('newsletter_articles')
-    .select('id, newsletter_id, article_id, title, description, url, publisher, ai_title, ai_description, newsletter_category')
+  let curatedArticles: CuratedArticleRow[] = []
+
+  let curatedError: { message: string } | null = null
+
+  const primaryCuratedResult = await db
+    .from('articles')
+    .select('id, title, description, url, publisher, published_at, ai_title:title_snippet, ai_description:description_snippet, newsletter_category:category')
     .eq('newsletter_id', newsletterId)
     .order('id', { ascending: false })
 
+  curatedArticles = (primaryCuratedResult.data as CuratedArticleRow[] | null) || []
+  curatedError = primaryCuratedResult.error ? { message: primaryCuratedResult.error.message } : null
+
   if (curatedError) {
-    throw new Error('Failed to fetch curated articles')
-  }
-
-  const curatedArticleIds: number[] =
-    curatedArticles
-      ?.map((item: { article_id: number | null }) => item.article_id)
-      .filter((articleId: number | null): articleId is number => typeof articleId === 'number') || []
-
-  let curatedArticleMetaById = new Map<number, { published_at: string | null; publisher: string | null }>()
-
-  if (curatedArticleIds.length > 0) {
-    const { data: curatedArticleMeta, error: curatedArticleMetaError } = await db
-      .from('articles')
-      .select('id, published_at, publisher')
-      .in('id', curatedArticleIds)
-
-    if (curatedArticleMetaError) {
-      throw new Error('Failed to fetch curated article metadata')
-    }
-
-    curatedArticleMetaById = new Map(
-      (curatedArticleMeta || []).map((item: { id: number; published_at: string | null; publisher: string | null }) => [
-        item.id,
-        { published_at: item.published_at, publisher: item.publisher },
-      ])
-    )
+    throw new Error(`Failed to fetch curated articles: ${curatedError.message}`)
   }
 
   let inboxQuery = db
     .from('articles')
     .select('id, title, description, url, publisher, published_at, category')
-
-  if (curatedArticleIds.length > 0) {
-    inboxQuery = inboxQuery.not('id', 'in', `(${curatedArticleIds.join(',')})`)
-  }
+    .is('newsletter_id', null)
 
   if (selectedCategory === 'uncategorized') {
     inboxQuery = inboxQuery.or('category.is.null,category.eq.')
@@ -369,11 +360,11 @@ export default async function NewsletterCuratePage({ params, searchParams }: Pag
             {curatedArticles?.length ? (
               curatedArticles.map((article: {
                 id: number
-                article_id: number | null
                 title: string | null
                 description: string | null
                 url: string | null
                 publisher: string | null
+                published_at: string | null
                 ai_title: string | null
                 ai_description: string | null
                 newsletter_category: string | null
@@ -418,14 +409,10 @@ export default async function NewsletterCuratePage({ params, searchParams }: Pag
 
                       <div className="w-full max-w-52 shrink-0 space-y-1 lg:text-right">
                         <p className="type-caption text-(--color-text-secondary)">
-                          {formatPublishedAt(
-                            article.article_id ? (curatedArticleMetaById.get(article.article_id)?.published_at ?? null) : null
-                          )}
+                          {formatPublishedAt(article.published_at)}
                         </p>
                         <p className="type-caption text-(--color-text-secondary)">
-                          {article.publisher ||
-                            (article.article_id ? curatedArticleMetaById.get(article.article_id)?.publisher : null) ||
-                            'Unknown publisher'}
+                          {article.publisher || 'Unknown publisher'}
                         </p>
                         <div className="pt-1">
                           <CategorySelect articleId={article.id} currentCategory={article.newsletter_category} />

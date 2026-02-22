@@ -16,7 +16,10 @@ export default function CategorySelect({
   currentCategory: string | null
 }) {
   const [isPending, startTransition] = useTransition()
-  const [optimisticCategory, setOptimisticCategory] = useState<string | null>(currentCategory)
+  const [optimisticCategory, setOptimisticCategory] = useState<string | null>(() => {
+    const normalized = normalizeCategoryValue(currentCategory)
+    return normalized || null
+  })
   const categoryToneClass = getCategorySelectTone(normalizeCategoryValue(optimisticCategory))
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

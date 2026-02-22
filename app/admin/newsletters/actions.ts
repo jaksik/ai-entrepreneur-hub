@@ -11,6 +11,31 @@ type UpdateFields = {
   newsletter_category?: string | null
 }
 
+type BeehiivArticleRow = {
+  id: number
+  title: string | null
+  description: string | null
+  ai_title: string | null
+  ai_description: string | null
+  url: string | null
+  newsletter_category: string | null
+}
+
+function parsePublishDateInput(input: string | null | undefined) {
+  const value = input?.trim()
+  if (!value) return null
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const dateAtDefaultTime = new Date(`${value}T00:01:00`)
+    if (Number.isNaN(dateAtDefaultTime.getTime())) return null
+    return dateAtDefaultTime.toISOString()
+  }
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return null
+  return parsed.toISOString()
+}
+
 export async function createNewsletter(formData: FormData) {
   const supabase = await createClient()
   const db = supabase
@@ -26,7 +51,7 @@ export async function createNewsletter(formData: FormData) {
   }
 
   const sub_title = typeof subTitleInput === 'string' ? subTitleInput.trim() : ''
-  const publish_date = publishDateInput ? new Date(publishDateInput).toISOString() : null
+  const publish_date = parsePublishDateInput(publishDateInput)
   const allowedStatuses = new Set(['draft', 'scheduled', 'sent', 'archived'])
   const normalizedStatus = typeof statusInput === 'string' ? statusInput.trim().toLowerCase() : 'draft'
   const status = allowedStatuses.has(normalizedStatus) ? normalizedStatus : 'draft'
@@ -126,34 +151,34 @@ export async function updateNewsletterPublishDate(formData: FormData) {
 }
 
 export async function updateArticleContent(
-  newsletterArticleId: number,
+  articleId: number,
   updatedFields: UpdateFields
 ) {
   const supabase = await createClient()
   const db = supabase
 
   const { data: assignment, error: assignmentError } = await db
-    .from('newsletter_articles')
+    .from('articles')
     .select('newsletter_id')
-    .eq('id', newsletterArticleId)
+    .eq('id', articleId)
     .maybeSingle()
 
   if (assignmentError) {
-    throw new Error('Failed to load newsletter article')
+    throw new Error('Failed to load article')
   }
 
   const payload: Record<string, string | null> = {}
   
   if (updatedFields.title !== undefined) payload.title = updatedFields.title
   if (updatedFields.description !== undefined) payload.description = updatedFields.description
-  if (updatedFields.ai_title !== undefined) payload.ai_title = updatedFields.ai_title
-  if (updatedFields.ai_description !== undefined) payload.ai_description = updatedFields.ai_description
-  if (updatedFields.newsletter_category !== undefined) payload.newsletter_category = updatedFields.newsletter_category
+  if (updatedFields.ai_title !== undefined) payload.title_snippet = updatedFields.ai_title
+  if (updatedFields.ai_description !== undefined) payload.description_snippet = updatedFields.ai_description
+  if (updatedFields.newsletter_category !== undefined) payload.category = updatedFields.newsletter_category
 
-  const { error } = await db
-    .from('newsletter_articles')
+  let { error } = await db
+    .from('articles')
     .update(payload)
-    .eq('id', newsletterArticleId)
+    .eq('id', articleId)
 
   if (error) {
     throw new Error('Failed to update article content')
@@ -170,7 +195,7 @@ export async function updateArticleContent(
 }
 
 export async function generateAiSnippet(
-  newsletterArticleId: number,
+  articleId: number,
   originalTitle: string,
   originalDescription: string
 ) {
@@ -178,13 +203,13 @@ export async function generateAiSnippet(
   const db = supabase
 
   const { data: assignment, error: assignmentError } = await db
-    .from('newsletter_articles')
+    .from('articles')
     .select('newsletter_id')
-    .eq('id', newsletterArticleId)
+    .eq('id', articleId)
     .maybeSingle()
 
   if (assignmentError) {
-    throw new Error('Failed to load newsletter article')
+    throw new Error('Failed to load article')
   }
 
   const cleanTitle = originalTitle?.trim() || 'Breaking AI Update'
@@ -193,13 +218,13 @@ export async function generateAiSnippet(
   const aiTitle = `⚡ ${cleanTitle}: The Founder Playbook Angle`
   const aiDescription = `Move fast on this: ${cleanDescription} Here’s the sharp takeaway, what it means right now, and the next move to stay ahead.`
 
-  const { error } = await db
-    .from('newsletter_articles')
+  let { error } = await db
+    .from('articles')
     .update({
-      ai_title: aiTitle,
-      ai_description: aiDescription,
+      title_snippet: aiTitle,
+      description_snippet: aiDescription,
     })
-    .eq('id', newsletterArticleId)
+    .eq('id', articleId)
 
   if (error) {
     throw new Error('Failed to generate AI snippet')
@@ -215,7 +240,7 @@ export async function generateAiSnippet(
   }
 }
 
-export async function setNewsletterCoverArticle(newsletterId: number, newsletterArticleId: number) {
+export async function setNewsletterCoverArticle(newsletterId: number, articleId: number) {
   const supabase = await createClient()
   const db = supabase
 
@@ -223,27 +248,27 @@ export async function setNewsletterCoverArticle(newsletterId: number, newsletter
     throw new Error('Valid newsletter id is required')
   }
 
-  if (!Number.isInteger(newsletterArticleId) || newsletterArticleId <= 0) {
-    throw new Error('Valid newsletter article id is required')
+  if (!Number.isInteger(articleId) || articleId <= 0) {
+    throw new Error('Valid article id is required')
   }
 
-  const { data: newsletterArticle, error: newsletterArticleError } = await db
-    .from('newsletter_articles')
+  const { data: article, error: articleError } = await db
+    .from('articles')
     .select('id, newsletter_id')
-    .eq('id', newsletterArticleId)
+    .eq('id', articleId)
     .maybeSingle()
 
-  if (newsletterArticleError) {
-    throw new Error('Failed to load newsletter article')
+  if (articleError) {
+    throw new Error('Failed to load article')
   }
 
-  if (!newsletterArticle || newsletterArticle.newsletter_id !== newsletterId) {
-    throw new Error('Newsletter article does not belong to this newsletter')
+  if (!article || article.newsletter_id !== newsletterId) {
+    throw new Error('Article does not belong to this newsletter')
   }
 
   const { error } = await db
     .from('newsletters')
-    .update({ cover_article: newsletterArticleId })
+    .update({ cover_article: articleId })
     .eq('id', newsletterId)
 
   if (error) {
@@ -274,18 +299,25 @@ export async function getNewsletterBeehiivData(newsletterId: number) {
     throw new Error('Failed to fetch newsletter')
   }
 
-  const { data: articles, error: articlesError } = await db
-    .from('newsletter_articles')
-    .select('id, title, description, ai_title, ai_description, url, newsletter_category')
+  let articles: BeehiivArticleRow[] = []
+
+  let articlesError: { message: string } | null = null
+
+  const primaryArticlesResult = await db
+    .from('articles')
+    .select('id, title, description, ai_title:title_snippet, ai_description:description_snippet, url, newsletter_category:category')
     .eq('newsletter_id', newsletterId)
     .order('id', { ascending: true })
 
+  articles = (primaryArticlesResult.data as BeehiivArticleRow[] | null) || []
+  articlesError = primaryArticlesResult.error ? { message: primaryArticlesResult.error.message } : null
+
   if (articlesError) {
-    throw new Error('Failed to fetch newsletter articles')
+    throw new Error(`Failed to fetch newsletter articles: ${articlesError.message}`)
   }
 
   return {
     newsletter,
-    articles: articles || [],
+    articles,
   }
 }

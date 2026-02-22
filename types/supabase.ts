@@ -16,82 +16,49 @@ export type Database = {
     Tables: {
       articles: {
         Row: {
+          created_at: string
           id: number
           title: string | null
-          title_snippets: string | null
-          description: string | null
-          source: string | null
           url: string | null
           publisher: string | null
           category: string | null
           published_at: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: never
-          title?: string | null
-          title_snippets?: string | null
-          description?: string | null
-          source?: string | null
-          url?: string | null
-          publisher?: string | null
-          category?: string | null
-          published_at?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: never
-          title?: string | null
-          title_snippets?: string | null
-          description?: string | null
-          source?: string | null
-          url?: string | null
-          publisher?: string | null
-          category?: string | null
-          published_at?: string | null
-          created_at?: string
-        }
-        Relationships: []
-      }
-      newsletter_articles: {
-        Row: {
-          id: number
-          newsletter_id: number
-          article_id: number | null
-          title: string | null
           description: string | null
-          url: string | null
-          publisher: string | null
-          published_at: string | null
-          ai_title: string | null
-          ai_description: string | null
-          newsletter_category: string | null
+          source: string | null
+          source_feature: boolean
+          title_snippet: string | null
+          description_snippet: string | null
+          newsletter_id: number | null
         }
         Insert: {
+          created_at?: string
           id?: never
-          newsletter_id: number
-          article_id?: number | null
           title?: string | null
-          description?: string | null
           url?: string | null
           publisher?: string | null
+          category?: string | null
           published_at?: string | null
-          ai_title?: string | null
-          ai_description?: string | null
-          newsletter_category?: string | null
+          description?: string | null
+          source?: string | null
+          source_feature?: boolean
+          title_snippet?: string | null
+          description_snippet?: string | null
+          newsletter_id?: number | null
         }
         Update: {
+          created_at?: string
           id?: never
-          newsletter_id?: number
-          article_id?: number | null
           title?: string | null
-          description?: string | null
           url?: string | null
           publisher?: string | null
+          category?: string | null
           published_at?: string | null
-          ai_title?: string | null
-          ai_description?: string | null
-          newsletter_category?: string | null
+          description?: string | null
+          source?: string | null
+          source_feature?: boolean
+          title_snippet?: string | null
+          description_snippet?: string | null
+          newsletter_id?: number | null
         }
         Relationships: []
       }
@@ -127,31 +94,114 @@ export type Database = {
       }
       newsletters: {
         Row: {
+          created_at: string
           id: number
-          title: string | null
           publish_date: string | null
-          status: string | null
+          title: string | null
           sub_title: string | null
+          intro: string | null
+          status: string | null
           cover_image: string | null
           cover_article: number | null
         }
         Insert: {
+          created_at?: string
           id?: never
-          title?: string | null
           publish_date?: string | null
-          status?: string | null
+          title?: string | null
           sub_title?: string | null
+          intro?: string | null
+          status?: string | null
           cover_image?: string | null
           cover_article?: number | null
         }
         Update: {
+          created_at?: string
           id?: never
-          title?: string | null
           publish_date?: string | null
-          status?: string | null
+          title?: string | null
           sub_title?: string | null
+          intro?: string | null
+          status?: string | null
           cover_image?: string | null
           cover_article?: number | null
+        }
+        Relationships: []
+      }
+      job_postings: {
+        Row: {
+          id: number
+          created_at: string
+          job_id: string | null
+          newsletter_id: number | null
+          title: string | null
+          company: string | null
+          location: string | null
+          apply_link: string | null
+          remote: boolean | null
+          company_logo: string | null
+          description: string | null
+          posted_date: string | null
+        }
+        Insert: {
+          id?: never
+          created_at?: string
+          job_id?: string | null
+          newsletter_id?: number | null
+          title?: string | null
+          company?: string | null
+          location?: string | null
+          apply_link?: string | null
+          remote?: boolean | null
+          company_logo?: string | null
+          description?: string | null
+          posted_date?: string | null
+        }
+        Update: {
+          id?: never
+          created_at?: string
+          job_id?: string | null
+          newsletter_id?: number | null
+          title?: string | null
+          company?: string | null
+          location?: string | null
+          apply_link?: string | null
+          remote?: boolean | null
+          company_logo?: string | null
+          description?: string | null
+          posted_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_postings_newsletter_id_fkey"
+            columns: ["newsletter_id"]
+            isOneToOne: false
+            referencedRelation: "newsletters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      script_logs: {
+        Row: {
+          id: number
+          created_at: string
+          status: string | null
+          script_name: string | null
+          message: string | null
+        }
+        Insert: {
+          id?: never
+          created_at?: string
+          status?: string | null
+          script_name?: string | null
+          message?: string | null
+        }
+        Update: {
+          id?: never
+          created_at?: string
+          status?: string | null
+          script_name?: string | null
+          message?: string | null
         }
         Relationships: []
       }

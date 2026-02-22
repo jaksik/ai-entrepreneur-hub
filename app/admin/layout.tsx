@@ -33,12 +33,24 @@ export default async function AdminLayout({
             </Link>
             <AdminNavLinks newsletters={newsletters || []} />
           </div>
-          <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-3">
             <ThemeToggle />
-            <span className="type-caption text-(--color-text-secondary)">{user.email}</span>
-            <form action="/auth/signout" method="post">
-              <button className="type-caption text-(--color-text-secondary) hover:text-(--color-text-primary)">Sign Out</button>
-            </form>
+            <details className="group relative">
+              <summary className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-full border border-(--color-card-border) bg-(--color-bg-secondary) type-caption font-medium text-(--color-text-primary) marker:content-none hover:bg-(--color-card-bg)">
+                {(user.email?.[0] || 'U').toUpperCase()}
+              </summary>
+
+              <div className="absolute right-0 z-20 mt-2 w-60 overflow-hidden rounded-lg border border-(--color-card-border) bg-(--color-card-bg) shadow-sm">
+                <div className="border-b border-(--color-card-border) px-3 py-2">
+                  <p className="type-caption truncate text-(--color-text-secondary)">{user.email}</p>
+                </div>
+                <form action="/auth/signout" method="post" className="p-2">
+                  <button className="w-full rounded-md border border-(--color-card-border) px-3 py-1.5 text-left type-caption text-(--color-text-primary) transition hover:bg-(--color-bg-secondary)">
+                    Sign Out
+                  </button>
+                </form>
+              </div>
+            </details>
           </div>
         </div>
       </nav>
