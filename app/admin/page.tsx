@@ -5,6 +5,15 @@ type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
+type ArticleFetcherLogRow = {
+  id: number
+  created_at: string
+  status: string | null
+  name: string | null
+  message: string | null
+  category: string | null
+}
+
 const LOG_LIMIT_OPTIONS = [10, 25, 50, 75, 100] as const
 
 function getSingleSearchParam(value: string | string[] | undefined) {
@@ -72,7 +81,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
     : 10
 
   const supabase = await createClient()
-  const [{ count: toolsCount }, { count: articlesCount }, logsResult] = await Promise.all([
+  const [{ count: toolsCount }, { count: articlesCount }, logsResult, articleFetcherLogsResult, jobFetcherLogsResult] = await Promise.all([
     supabase.from('tools').select('*', { count: 'exact', head: true }),
     supabase.from('articles').select('*', { count: 'exact', head: true }),
     supabase
@@ -80,23 +89,58 @@ export default async function AdminPage({ searchParams }: PageProps) {
       .select('id, created_at, status, script_name, message')
       .order('created_at', { ascending: false })
       .limit(logsLimit),
+    (supabase as any)
+      .from('logs')
+      .select('id, created_at, status, name, message, category')
+      .eq('category', 'Article Fetcher')
+      .order('created_at', { ascending: false })
+      .limit(10),
+    (supabase as any)
+      .from('logs')
+      .select('id, created_at, status, name, message, category')
+      .eq('category', 'Job Fetcher')
+      .order('created_at', { ascending: false })
+      .limit(10),
   ])
 
   if (logsResult.error) {
     throw new Error('Failed to fetch script logs')
   }
 
+  if (articleFetcherLogsResult.error) {
+    throw new Error('Failed to fetch Article Fetcher logs')
+  }
+
+  if (jobFetcherLogsResult.error) {
+    throw new Error('Failed to fetch Job Fetcher logs')
+  }
+
   const logs = logsResult.data || []
+  const articleFetcherLogs = ((articleFetcherLogsResult.data || []) as ArticleFetcherLogRow[]).map((log) => ({
+    id: log.id,
+    created_at: log.created_at,
+    status: log.status,
+    name: log.name,
+    message: log.message,
+  }))
+
+  const jobFetcherLogs = ((jobFetcherLogsResult.data || []) as ArticleFetcherLogRow[]).map((log) => ({
+    id: log.id,
+    created_at: log.created_at,
+    status: log.status,
+    name: log.name,
+    message: log.message,
+  }))
 
   return (
     <div>
-      <h2 className="type-title mb-6 text-(--color-text-primary)">Admin - Press Buttons, Make Money</h2>
-      <div className="mt-8">
-        <h3 className="type-subtitle text-(--color-text-primary)">Welcome, Connor. Today is a good day. It's Wednesday, Feb 14th.</h3>
+      <h2 className="type-title mb-2 text-(--color-text-primary)">Admin - Press Buttons, Make Money</h2>
+        <h3 className="type-subtitle text-(--color-text-primary)">Welcome, Connor. Today is a good day to make money. It's Wednesday, Feb 14th.</h3>
+
+
+      <div className="mt-6 flex justify-center">
+        <ColorDropdownTabs articleFetcherLogs={articleFetcherLogs} jobFetcherLogs={jobFetcherLogs} />
       </div>
-
-
-      <ColorDropdownTabs />
 
       {/* 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
