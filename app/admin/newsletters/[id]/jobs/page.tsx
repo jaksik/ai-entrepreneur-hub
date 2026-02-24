@@ -1,11 +1,18 @@
 import { createClient } from '@/utils/supabase/server'
 import { addJobToNewsletter, importGoogleJobs } from './actions'
+import ContentTabs from '../ContentTabs'
 
 const QUERY_OPTIONS = ['AI Enablement', 'AI Automation', 'AI Sales', 'AI Research', 'AI Content Strategist', 'AI Security'] as const
 
 type PageProps = {
   params: Promise<{ id: string }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
+}
+
+type NewsletterSummary = {
+  title: string | null
+  sub_title: string | null
+  publish_date: string | null
 }
 
 function getSingleSearchParam(value: string | string[] | undefined) {
@@ -43,6 +50,19 @@ function formatDateOnly(value: string | null) {
   }).format(parsed)
 }
 
+function formatDateNoYear(value: string | null) {
+  if (!value) return '—'
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return '—'
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'UTC',
+  }).format(parsed)
+}
+
 function getStatusAlertStyles(status: string | undefined) {
   if (status === 'error') {
     return 'border-rose-500/35 bg-rose-500/10 text-rose-700 dark:text-rose-300'
@@ -72,15 +92,36 @@ export default async function NewsletterJobsPage({ params, searchParams }: PageP
     .order('created_at', { ascending: false })
     .limit(200)
 
+  const { data: selectedNewsletter, error: selectedNewsletterError } = await supabase
+    .from('newsletters')
+    .select('title, sub_title, publish_date')
+    .eq('id', newsletterId)
+    .maybeSingle<NewsletterSummary>()
+
   if (jobsError) {
     throw new Error('Failed to fetch job postings')
   }
 
+  if (selectedNewsletterError) {
+    throw new Error('Failed to fetch selected newsletter')
+  }
+
   return (
-    <section className="w-full bg-(--color-bg-primary)">
-      <div className="mb-6">
-        <h2 className="type-title text-(--color-text-primary)">Jobs</h2>
-        <p className="type-caption text-(--color-text-secondary)">Import Google Jobs via SerpAPI and add selected jobs to this newsletter.</p>
+    <div className="mx-auto w-full max-w-6xl">
+      <ContentTabs newsletterId={newsletterId} active="jobs" />
+
+      <div className="mb-4 flex min-h-20 justify-between gap-3">
+        <div className="self-start">
+          <p className="type-body text-3xl text-(--color-text-primary)">{selectedNewsletter?.title || `Newsletter #${newsletterId}`}</p>
+          <p className="type-caption text-xl text-(--color-text-secondary)">{selectedNewsletter?.sub_title || '—'}</p>
+          <p className="type-caption text-xl text-(--color-text-secondary)">
+            Publish date: {formatDateOnly(selectedNewsletter?.publish_date || null)}
+          </p>
+        </div>
+
+        <div className="self-end">
+          <p className="type-caption text-(--color-text-secondary)">Import Google Jobs via SerpAPI and add selected jobs to this newsletter.</p>
+        </div>
       </div>
 
       {status ? (
@@ -91,7 +132,7 @@ export default async function NewsletterJobsPage({ params, searchParams }: PageP
         </div>
       ) : null}
 
-      <div className="rounded-xl border border-(--color-card-border) bg-(--color-card-bg) p-5">
+      <div className="rounded-lg border border-(--color-card-border) bg-(--color-card-bg) p-5">
         <form action={importGoogleJobs.bind(null, newsletterId)} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
@@ -165,32 +206,32 @@ export default async function NewsletterJobsPage({ params, searchParams }: PageP
         </form>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-(--color-card-border) bg-(--color-card-bg)">
-        <table className="w-full border-collapse">
+      <div className="mt-6 overflow-hidden rounded-lg border border-(--color-card-border) bg-(--color-card-bg)">
+        <table className="min-w-full divide-y divide-(--color-card-border)">
           <thead className="bg-(--color-bg-secondary)">
             <tr>
-              <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Created</th>
-              <th className="px-4 py-3 text-center type-caption text-(--color-text-secondary)">+</th>
-              <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Title</th>
-              <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Company</th>
-              <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Location</th>
-              <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Remote</th>
-              <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Posted Date</th>
-              <th className="px-4 py-3 text-left type-caption text-(--color-text-secondary)">Apply</th>
+              <th className="px-4 py-2.5 text-left type-caption text-(--color-text-secondary) uppercase tracking-wide">created</th>
+              <th className="px-2 py-2.5 text-center type-caption text-(--color-text-secondary) uppercase tracking-wide">+</th>
+              <th className="px-4 py-2.5 text-left type-caption text-(--color-text-secondary) uppercase tracking-wide">title</th>
+              <th className="px-4 py-2.5 text-left type-caption text-(--color-text-secondary) uppercase tracking-wide">company</th>
+              <th className="px-4 py-2.5 text-left type-caption text-(--color-text-secondary) uppercase tracking-wide">location</th>
+              <th className="px-4 py-2.5 text-left type-caption text-(--color-text-secondary) uppercase tracking-wide">remote</th>
+              <th className="px-4 py-2.5 text-left type-caption text-(--color-text-secondary) uppercase tracking-wide">posted</th>
+              <th className="px-4 py-2.5 text-left type-caption text-(--color-text-secondary) uppercase tracking-wide">apply</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-(--color-card-border) bg-(--color-card-bg)">
             {jobs?.length ? (
               jobs.map((job) => (
-                <tr key={job.id} className="border-t border-(--color-card-border)">
+                <tr key={job.id}>
                   <td className="px-4 py-3 align-top whitespace-nowrap type-caption text-(--color-text-secondary)">
-                    {formatDateTime(job.created_at)}
+                    {formatDateNoYear(job.created_at)}
                   </td>
-                  <td className="px-4 py-3 align-top whitespace-nowrap text-center type-caption">
+                  <td className="px-2 py-3 align-top whitespace-nowrap text-center type-caption">
                     <form action={addJobToNewsletter.bind(null, job.id, newsletterId)}>
                       <button
                         type="submit"
-                        className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-(--color-card-border) text-base text-emerald-600 transition hover:bg-emerald-500/10 dark:text-emerald-300"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-(--color-card-border) text-base leading-none text-emerald-600 transition hover:bg-emerald-500/10 dark:text-emerald-300"
                         title="Add to selected newsletter"
                       >
                         +
@@ -232,6 +273,6 @@ export default async function NewsletterJobsPage({ params, searchParams }: PageP
           </tbody>
         </table>
       </div>
-    </section>
+    </div>
   )
 }
