@@ -17,11 +17,13 @@ type ArticleFetcherLog = {
     status: string | null
     name: string | null
     message: string | null
+    category: string | null
 }
 
 type ColorDropdownTabsProps = {
     articleFetcherLogs: ArticleFetcherLog[]
     jobFetcherLogs: ArticleFetcherLog[]
+    snippetGeneratorLogs: ArticleFetcherLog[]
     recentArticlesCount: number
     recentJobPostingsCount: number
 }
@@ -74,6 +76,7 @@ function getLogStatusPill(status: string | null) {
 function getTabItems(
     articleFetcherLogs: ArticleFetcherLog[],
     jobFetcherLogs: ArticleFetcherLog[],
+    snippetGeneratorLogs: ArticleFetcherLog[],
     recentArticlesCount: number,
     recentJobPostingsCount: number,
 ): TabItem[] {
@@ -86,7 +89,7 @@ function getTabItems(
             textClass: 'text-blue-950',
             renderContent: () => (
                 <div className="space-y-3">
-                    <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
+                    <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 my-3">
                         <div
                             className={`inline-flex items-center rounded-full border px-2.5 py-1 whitespace-nowrap type-caption font-medium ${
                                 recentArticlesCount > 0
@@ -114,102 +117,116 @@ function getTabItems(
                     </div>
 
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                        <div className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
-                        <p className="type-caption font-sm2 underline text-(--color-text-secondary)">AI News Articles</p>
-                        <p className="mt-1 type-caption text-lg text-(--color-text-primary)">{recentArticlesCount} New Articles saved in the past 24h.</p>
-                        <div className="mt-2 overflow-hidden rounded-md border border-(--color-card-border)">
-                            <table className="w-full border-collapse">
-                                <thead className="bg-(--color-card-bg)">
-                                    <tr>
-                                        <th className="px-2 py-1 text-left type-caption text-(--color-text-secondary)">Time</th>
-                                        <th className="px-2 py-1 text-left type-caption text-(--color-text-secondary)">Name</th>
-                                        <th className="px-2 py-1 text-left type-caption text-(--color-text-secondary)">Stat</th>
-                                        <th className="px-2 py-1 text-left type-caption text-(--color-text-secondary)">Message</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {articleFetcherLogs.length ? (
-                                        articleFetcherLogs.map((log) => {
-                                            const statusPill = getLogStatusPill(log.status)
-
-                                            return (
-                                                <tr key={log.id} className="border-t border-(--color-card-border)">
-                                                    <td className="px-2 py-1 align-top whitespace-nowrap type-caption text-(--color-text-secondary)">{formatLogTime(log.created_at)}</td>
-                                                    <td className="px-2 py-1 align-top type-caption text-(--color-text-secondary)">{log.name || '—'}</td>
-                                                    <td className="px-2 py-1 align-top whitespace-nowrap type-caption text-(--color-text-primary)">
-                                                        <span
-                                                            className={`inline-flex h-5 w-5 items-center justify-center rounded-full border text-[11px] font-semibold ${statusPill.className}`}
-                                                            title={statusPill.label}
-                                                            aria-label={statusPill.label}
-                                                        >
-                                                            {statusPill.symbol}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-2 py-1 align-top type-caption text-(--color-text-secondary)">{log.message || '—'}</td>
-                                                </tr>
-                                            )
-                                        })
-                                    ) : (
+                        <details className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
+                            <summary className="cursor-pointer list-none">
+                                <p className="type-caption font-sm2 underline text-(--color-text-secondary)">AI News Articles</p>
+                                <p className="mt-1 type-caption text-lg text-(--color-text-primary)">{recentArticlesCount} New Articles saved in the past 24h.</p>
+                            </summary>
+                            <div className="mt-2 overflow-hidden rounded-md border border-(--color-card-border)">
+                                <table className="w-full border-collapse">
+                                    <thead className="bg-(--color-card-bg)">
                                         <tr>
-                                            <td colSpan={4} className="px-2 py-2 text-center type-caption text-(--color-text-secondary)">No logs found.</td>
+                                            <th className="px-2 py-1 text-left type-caption text-(--color-text-secondary)">Status</th>
+                                            <th className="px-2 py-1 text-left type-caption text-(--color-text-secondary)">Name</th>
+                                            <th className="px-2 py-1 text-left type-caption text-(--color-text-secondary)">Message</th>
+                                            <th className="px-2 py-1 text-left type-caption text-(--color-text-secondary)">Date</th>
                                         </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                        </div>
-                        <div className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
-                        <p className="type-caption font-sm2 underline text-(--color-text-secondary)">AI Job Postings</p>
-                        <p className="mt-1 type-caption text-lg text-(--color-text-primary)">{recentJobPostingsCount} New job postings saved in the past 24h.</p>
-                        <div className="mt-2 overflow-hidden rounded-md border border-(--color-card-border)">
-                            <table className="w-full border-collapse">
-                                <thead className="bg-(--color-card-bg)">
-                                    <tr>
-                                        <th className="px-2 py-1 text-left type-caption text-(--color-text-secondary)">Time</th>
-                                        <th className="px-2 py-1 text-left type-caption text-(--color-text-secondary)">Name</th>
-                                        <th className="px-2 py-1 text-left type-caption text-(--color-text-secondary)">Stat</th>
-                                        <th className="px-2 py-1 text-left type-caption text-(--color-text-secondary)">Message</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {jobFetcherLogs.length ? (
-                                        jobFetcherLogs.map((log) => {
-                                            const statusPill = getLogStatusPill(log.status)
+                                    </thead>
+                                    <tbody>
+                                        {articleFetcherLogs.length ? (
+                                            articleFetcherLogs.map((log) => {
+                                                const statusPill = getLogStatusPill(log.status)
 
-                                            return (
-                                                <tr key={log.id} className="border-t border-(--color-card-border)">
-                                                    <td className="px-2 py-1 align-top whitespace-nowrap type-caption text-(--color-text-secondary)">{formatLogTime(log.created_at)}</td>
-                                                    <td className="px-2 py-1 align-top type-caption text-(--color-text-secondary)">{log.name || '—'}</td>
-                                                    <td className="px-2 py-1 align-top whitespace-nowrap type-caption text-(--color-text-primary)">
-                                                        <span
-                                                            className={`inline-flex h-5 w-5 items-center justify-center rounded-full border text-[11px] font-semibold ${statusPill.className}`}
-                                                            title={statusPill.label}
-                                                            aria-label={statusPill.label}
-                                                        >
-                                                            {statusPill.symbol}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-2 py-1 align-top type-caption text-(--color-text-secondary)">{log.message || '—'}</td>
-                                                </tr>
-                                            )
-                                        })
-                                    ) : (
+                                                return (
+                                                    <tr key={log.id} className="border-t border-(--color-card-border)">
+                                                        <td className="px-2 py-1 align-top whitespace-nowrap type-caption text-(--color-text-primary)">
+                                                            <span
+                                                                className={`inline-flex h-5 w-5 items-center justify-center rounded-full border text-[11px] font-semibold ${statusPill.className}`}
+                                                                title={statusPill.label}
+                                                                aria-label={statusPill.label}
+                                                            >
+                                                                {statusPill.symbol}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-2 py-1 align-top type-caption text-(--color-text-secondary)">{log.name || '—'}</td>
+                                                        <td className="px-2 py-1 align-top type-caption text-(--color-text-secondary)">{log.message || '—'}</td>
+                                                        <td className="px-2 py-1 align-top whitespace-nowrap type-caption text-(--color-text-secondary)">{formatLogTime(log.created_at)}</td>
+                                                    </tr>
+                                                )
+                                            })
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={4} className="px-2 py-2 text-center type-caption text-(--color-text-secondary)">No logs found.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </details>
+                        <details className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
+                            <summary className="cursor-pointer list-none">
+                                <p className="type-caption font-sm2 underline text-(--color-text-secondary)">AI Job Postings</p>
+                                <p className="mt-1 type-caption text-lg text-(--color-text-primary)">{recentJobPostingsCount} New job postings saved in the past 24h.</p>
+                            </summary>
+                            <div className="mt-2 overflow-hidden rounded-md border border-(--color-card-border)">
+                                <table className="w-full border-collapse">
+                                    <thead className="bg-(--color-card-bg)">
                                         <tr>
-                                            <td colSpan={4} className="px-2 py-2 text-center type-caption text-(--color-text-secondary)">No logs found.</td>
+                                            <th className="px-2 py-1 text-left type-caption text-(--color-text-secondary)">Status</th>
+                                            <th className="px-2 py-1 text-left type-caption text-(--color-text-secondary)">Name</th>
+                                            <th className="px-2 py-1 text-left type-caption text-(--color-text-secondary)">Message</th>
+                                            <th className="px-2 py-1 text-left type-caption text-(--color-text-secondary)">Date</th>
                                         </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                        </div>
-                        <div className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
-                        <p className="type-caption font-sm2 underline text-(--color-text-secondary)">AI Economic Stats</p>
-                        <p className="mt-1 type-caption text-lg text-(--color-text-primary)">AI economy stuff goes here.</p>
-                        </div>
-                        <div className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
-                        <p className="type-caption font-sm2 underline text-(--color-text-secondary)">AI Breakout Trends</p>
-                        <p className="mt-1 type-caption text-lg text-(--color-text-primary)">AI breakout trends go here.</p>
-                        </div>
+                                    </thead>
+                                    <tbody>
+                                        {jobFetcherLogs.length ? (
+                                            jobFetcherLogs.map((log) => {
+                                                const statusPill = getLogStatusPill(log.status)
+
+                                                return (
+                                                    <tr key={log.id} className="border-t border-(--color-card-border)">
+                                                        <td className="px-2 py-1 align-top whitespace-nowrap type-caption text-(--color-text-primary)">
+                                                            <span
+                                                                className={`inline-flex h-5 w-5 items-center justify-center rounded-full border text-[11px] font-semibold ${statusPill.className}`}
+                                                                title={statusPill.label}
+                                                                aria-label={statusPill.label}
+                                                            >
+                                                                {statusPill.symbol}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-2 py-1 align-top type-caption text-(--color-text-secondary)">{log.name || '—'}</td>
+                                                        <td className="px-2 py-1 align-top type-caption text-(--color-text-secondary)">{log.message || '—'}</td>
+                                                        <td className="px-2 py-1 align-top whitespace-nowrap type-caption text-(--color-text-secondary)">{formatLogTime(log.created_at)}</td>
+                                                    </tr>
+                                                )
+                                            })
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={4} className="px-2 py-2 text-center type-caption text-(--color-text-secondary)">No logs found.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </details>
+                        <details className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
+                            <summary className="cursor-pointer list-none">
+                                <p className="type-caption font-sm2 underline text-(--color-text-secondary)">AI Economic Stats</p>
+                            </summary>
+                            <p className="mt-2 type-caption text-lg text-(--color-text-primary)">AI economy stuff goes here.</p>
+                        </details>
+                        <details className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
+                            <summary className="cursor-pointer list-none">
+                                <p className="type-caption font-sm2 underline text-(--color-text-secondary)">AI Breakout Trends</p>
+                            </summary>
+                            <p className="mt-2 type-caption text-lg text-(--color-text-primary)">AI breakout trends go here.</p>
+                        </details>
+                        <details className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
+                            <summary className="cursor-pointer list-none">
+                                <p className="type-caption font-sm2 underline text-(--color-text-secondary)">YouTube Interview Summaries</p>
+                            </summary>
+                            <p className="mt-2 type-caption text-lg text-(--color-text-primary)">YouTube interview summaries go here.</p>
+                        </details>
                     </div>
                 </div>
             ),
@@ -221,9 +238,9 @@ function getTabItems(
             buttonClass: 'bg-purple-400',
             textClass: 'text-purple-950',
             renderContent: () => (
-                    <div className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
+                    <div className="">
                         <p className="type-caption font-sm2 underline text-(--color-text-secondary)">AI News Articles</p>
-                        <p className="mt-1 type-caption text-lg text-(--color-text-primary)">27 New Articles saved in the past 24h.</p>
+                        <p className="mt-1 type-caption text-lg text-(--color-text-primary)">{snippetGeneratorLogs.length} Snippet Generator logs.</p>
                         <div className="mt-2 overflow-hidden rounded-md border border-(--color-card-border)">
                             <table className="w-full border-collapse">
                                 <thead className="bg-(--color-card-bg)">
@@ -235,8 +252,8 @@ function getTabItems(
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {articleFetcherLogs.length ? (
-                                        articleFetcherLogs.map((log) => {
+                                    {snippetGeneratorLogs.length ? (
+                                        snippetGeneratorLogs.map((log) => {
                                             const statusPill = getLogStatusPill(log.status)
 
                                             return (
@@ -314,8 +331,8 @@ function getTabItems(
     ]
 }
 
-export default function ColorDropdownTabs({ articleFetcherLogs, jobFetcherLogs, recentArticlesCount, recentJobPostingsCount }: ColorDropdownTabsProps) {
-    const tabItems = getTabItems(articleFetcherLogs, jobFetcherLogs, recentArticlesCount, recentJobPostingsCount)
+export default function ColorDropdownTabs({ articleFetcherLogs, jobFetcherLogs, snippetGeneratorLogs, recentArticlesCount, recentJobPostingsCount }: ColorDropdownTabsProps) {
+    const tabItems = getTabItems(articleFetcherLogs, jobFetcherLogs, snippetGeneratorLogs, recentArticlesCount, recentJobPostingsCount)
     const [openTabKey, setOpenTabKey] = useState<string | null>(null)
     const activeItem = tabItems.find((item) => item.key === openTabKey) || null
 
@@ -349,15 +366,14 @@ export default function ColorDropdownTabs({ articleFetcherLogs, jobFetcherLogs, 
                     </div>
                 </div>
             </div>
-            <div className="mt-3 rounded-lg border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
-                <div className="mb-5 px-3 py-2.5">
+                {/* <div className="mb-5 px-3 py-2.5">
                     <div className="mb-2 flex items-center justify-between">
                         <span className="type-caption font-medium text-lg text-(--color-text-primary)">Today's Progress</span>
                     </div>
                     <div className="h-8 w-full overflow-hidden rounded-full border border-(--color-card-border) bg-(--color-card-bg)">
                         <div className="h-full w-1/2 rounded-full bg-emerald-500" />
                     </div>
-                </div>
+                </div> */}
                 <div className="grid grid-flow-col auto-cols-fr gap-0 overflow-hidden rounded-t-md border border-(--color-card-border)">
                     {tabItems.map((item) => (
                         <div key={item.key} className={`relative ${item.buttonClass}`}>
@@ -387,7 +403,6 @@ export default function ColorDropdownTabs({ articleFetcherLogs, jobFetcherLogs, 
                         </div>
                     </div>
                 ) : null}
-            </div>
         </div>
     )
 }
