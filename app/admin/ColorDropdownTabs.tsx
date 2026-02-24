@@ -22,6 +22,8 @@ type ArticleFetcherLog = {
 type ColorDropdownTabsProps = {
     articleFetcherLogs: ArticleFetcherLog[]
     jobFetcherLogs: ArticleFetcherLog[]
+    recentArticlesCount: number
+    recentJobPostingsCount: number
 }
 
 function formatLogTime(value: string) {
@@ -69,7 +71,12 @@ function getLogStatusPill(status: string | null) {
     }
 }
 
-function getTabItems(articleFetcherLogs: ArticleFetcherLog[], jobFetcherLogs: ArticleFetcherLog[]): TabItem[] {
+function getTabItems(
+    articleFetcherLogs: ArticleFetcherLog[],
+    jobFetcherLogs: ArticleFetcherLog[],
+    recentArticlesCount: number,
+    recentJobPostingsCount: number,
+): TabItem[] {
     return [
         {
             key: 'blue',
@@ -78,10 +85,38 @@ function getTabItems(articleFetcherLogs: ArticleFetcherLog[], jobFetcherLogs: Ar
             buttonClass: 'bg-blue-400',
             textClass: 'text-blue-950',
             renderContent: () => (
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    <div className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
+                <div className="space-y-3">
+                    <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1">
+                        <div
+                            className={`inline-flex items-center rounded-full border px-2.5 py-1 whitespace-nowrap type-caption font-medium ${
+                                recentArticlesCount > 0
+                                    ? 'border-green-500 bg-green-400 text-green-950'
+                                    : 'border-(--color-card-border) bg-(--color-bg-secondary) text-(--color-text-secondary)'
+                            }`}
+                        >
+                            Articles {recentArticlesCount > 0 ? 'Ready' : 'Waiting'}
+                        </div>
+                        <div
+                            className={`inline-flex items-center rounded-full border px-2.5 py-1 whitespace-nowrap type-caption font-medium ${
+                                recentJobPostingsCount > 0
+                                    ? 'border-green-500 bg-green-400 text-green-950'
+                                    : 'border-(--color-card-border) bg-(--color-bg-secondary) text-(--color-text-secondary)'
+                            }`}
+                        >
+                            Jobs {recentJobPostingsCount > 0 ? 'Ready' : 'Waiting'}
+                        </div>
+                        <div className="inline-flex items-center rounded-full border border-(--color-card-border) bg-(--color-bg-secondary) px-2.5 py-1 whitespace-nowrap type-caption font-medium text-(--color-text-secondary)">
+                            Economic Data Waiting
+                        </div>
+                        <div className="inline-flex items-center rounded-full border border-(--color-card-border) bg-(--color-bg-secondary) px-2.5 py-1 whitespace-nowrap type-caption font-medium text-(--color-text-secondary)">
+                            Trend Data Waiting
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                        <div className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
                         <p className="type-caption font-sm2 underline text-(--color-text-secondary)">AI News Articles</p>
-                        <p className="mt-1 type-caption text-lg text-(--color-text-primary)">27 New Articles saved in the past 24h.</p>
+                        <p className="mt-1 type-caption text-lg text-(--color-text-primary)">{recentArticlesCount} New Articles saved in the past 24h.</p>
                         <div className="mt-2 overflow-hidden rounded-md border border-(--color-card-border)">
                             <table className="w-full border-collapse">
                                 <thead className="bg-(--color-card-bg)">
@@ -122,10 +157,10 @@ function getTabItems(articleFetcherLogs: ArticleFetcherLog[], jobFetcherLogs: Ar
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                    <div className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
+                        </div>
+                        <div className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
                         <p className="type-caption font-sm2 underline text-(--color-text-secondary)">AI Job Postings</p>
-                        <p className="mt-1 type-caption text-lg text-(--color-text-primary)">30 New job postings saved in the past 24h.</p>
+                        <p className="mt-1 type-caption text-lg text-(--color-text-primary)">{recentJobPostingsCount} New job postings saved in the past 24h.</p>
                         <div className="mt-2 overflow-hidden rounded-md border border-(--color-card-border)">
                             <table className="w-full border-collapse">
                                 <thead className="bg-(--color-card-bg)">
@@ -166,14 +201,15 @@ function getTabItems(articleFetcherLogs: ArticleFetcherLog[], jobFetcherLogs: Ar
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                    <div className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
+                        </div>
+                        <div className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
                         <p className="type-caption font-sm2 underline text-(--color-text-secondary)">AI Economic Stats</p>
                         <p className="mt-1 type-caption text-lg text-(--color-text-primary)">AI economy stuff goes here.</p>
-                    </div>
-                    <div className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
+                        </div>
+                        <div className="rounded-md border border-(--color-card-border) bg-(--color-bg-secondary) p-3">
                         <p className="type-caption font-sm2 underline text-(--color-text-secondary)">AI Breakout Trends</p>
                         <p className="mt-1 type-caption text-lg text-(--color-text-primary)">AI breakout trends go here.</p>
+                        </div>
                     </div>
                 </div>
             ),
@@ -278,8 +314,8 @@ function getTabItems(articleFetcherLogs: ArticleFetcherLog[], jobFetcherLogs: Ar
     ]
 }
 
-export default function ColorDropdownTabs({ articleFetcherLogs, jobFetcherLogs }: ColorDropdownTabsProps) {
-    const tabItems = getTabItems(articleFetcherLogs, jobFetcherLogs)
+export default function ColorDropdownTabs({ articleFetcherLogs, jobFetcherLogs, recentArticlesCount, recentJobPostingsCount }: ColorDropdownTabsProps) {
+    const tabItems = getTabItems(articleFetcherLogs, jobFetcherLogs, recentArticlesCount, recentJobPostingsCount)
     const [openTabKey, setOpenTabKey] = useState<string | null>(null)
     const activeItem = tabItems.find((item) => item.key === openTabKey) || null
 
@@ -322,13 +358,13 @@ export default function ColorDropdownTabs({ articleFetcherLogs, jobFetcherLogs }
                         <div className="h-full w-1/2 rounded-full bg-emerald-500" />
                     </div>
                 </div>
-                <div className="grid grid-flow-col auto-cols-fr gap-4 px-4">
+                <div className="grid grid-flow-col auto-cols-fr gap-0 overflow-hidden rounded-t-md border border-(--color-card-border)">
                     {tabItems.map((item) => (
-                        <div key={item.key} className="relative">
+                        <div key={item.key} className={`relative ${item.buttonClass}`}>
                             <button
                                 type="button"
                                 onClick={() => setOpenTabKey((current) => (current === item.key ? null : item.key))}
-                                className={`relative h-18 w-full rounded-sm ${item.buttonClass}`}
+                                className={`relative h-18 w-full ${item.buttonClass}`}
                                 aria-expanded={openTabKey === item.key}
                                 aria-controls={`tab-panel-${item.key}`}
                                 title={`${item.label} tab`}
@@ -342,7 +378,7 @@ export default function ColorDropdownTabs({ articleFetcherLogs, jobFetcherLogs }
                 </div>
 
                 {activeItem ? (
-                    <div id={`tab-panel-${activeItem.key}`} className="-mt-1 overflow-hidden rounded-b-md border border-(--color-card-border)">
+                    <div id={`tab-panel-${activeItem.key}`} className="overflow-hidden rounded-b-md border-x border-b border-(--color-card-border)">
                         <div className={`flex h-8 items-center justify-between px-3 py-2 ${activeItem.buttonClass}`}>
                             <span className={`type-caption font-medium ${activeItem.textClass}`}></span>
                         </div>

@@ -81,9 +81,13 @@ export default async function AdminPage({ searchParams }: PageProps) {
     : 10
 
   const supabase = await createClient()
-  const [{ count: toolsCount }, { count: articlesCount }, logsResult, articleFetcherLogsResult, jobFetcherLogsResult] = await Promise.all([
+  const twentyFourHoursAgoIso = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+
+  const [{ count: toolsCount }, { count: articlesCount }, { count: recentArticlesCount }, { count: recentJobPostingsCount }, logsResult, articleFetcherLogsResult, jobFetcherLogsResult] = await Promise.all([
     supabase.from('tools').select('*', { count: 'exact', head: true }),
     supabase.from('articles').select('*', { count: 'exact', head: true }),
+    supabase.from('articles').select('*', { count: 'exact', head: true }).gte('created_at', twentyFourHoursAgoIso),
+    supabase.from('job_postings').select('*', { count: 'exact', head: true }).gte('created_at', twentyFourHoursAgoIso),
     supabase
       .from('script_logs')
       .select('id, created_at, status, script_name, message')
@@ -139,7 +143,12 @@ export default async function AdminPage({ searchParams }: PageProps) {
 
 
       <div className="mt-6 flex justify-center">
-        <ColorDropdownTabs articleFetcherLogs={articleFetcherLogs} jobFetcherLogs={jobFetcherLogs} />
+        <ColorDropdownTabs
+          articleFetcherLogs={articleFetcherLogs}
+          jobFetcherLogs={jobFetcherLogs}
+          recentArticlesCount={recentArticlesCount ?? 0}
+          recentJobPostingsCount={recentJobPostingsCount ?? 0}
+        />
       </div>
 
       {/* 

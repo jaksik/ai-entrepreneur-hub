@@ -40,7 +40,7 @@ export default function ArticleCategorySelect({
       disabled={isPending}
       className={`w-full rounded-md border px-2 py-1.5 type-caption transition-colors disabled:opacity-50 ${categoryToneClass}`}
     >
-      <option value="">— Category —</option>
+      <option value="">Category</option>
       {CATEGORY_OPTIONS.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}
